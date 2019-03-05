@@ -13,6 +13,7 @@ before_install:
 
 install:
   - sudo apt-get install --yes qt512base
+  - sudo apt-get install --yes libgl1-mesa-dev-lts-xenial
 
 before_script:
   - QTDIR="/opt/qt512"
