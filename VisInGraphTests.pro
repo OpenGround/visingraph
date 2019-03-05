@@ -2,8 +2,9 @@ include(VisInGraph.pri)
 
 QT += testlib
 
-SOURCES += test/main.cpp \
-    test/main.cpp
+SOURCES += test/main.cpp
+
+SOURCES -= main.cpp
 
 QMAKE_CXXFLAGS += -fprofile-arcs -ftest-coverage
 LIBS += -lgcov
