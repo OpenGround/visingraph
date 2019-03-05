@@ -1,0 +1,25 @@
+language: cpp
+
+os: linux
+dist: xenial
+sudo: required
+compiler: 
+  - gcc
+  - clang
+
+before_install:
+  - sudo add-apt-repository --yes ppa:beineri/opt-qt-5.12.1-xenial
+  - sudo apt-get -qq update
+
+install:
+  - sudo apt-get install --yes qt512base
+
+before_script:
+  - QTDIR="/opt/qt512"
+  - PATH="$QTDIR/bin:$PATH"
+  - source /opt/qt512/bin/qt512-env.sh
+
+script:
+  - qmake -v
+  - qmake CONFIG+=silent VisInGraph.pro
+  - make
