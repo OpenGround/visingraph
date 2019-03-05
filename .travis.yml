@@ -10,6 +10,7 @@ compiler:
 before_install:
   - sudo add-apt-repository --yes ppa:beineri/opt-qt-5.12.1-xenial
   - sudo apt-get -qq update
+  - pip install --user cpp-coveralls
 
 install:
   - sudo apt-get install --yes qt512base
@@ -22,5 +23,9 @@ before_script:
 
 script:
   - qmake -v
-  - qmake CONFIG+=silent VisInGraph.pro
+  - qmake CONFIG+=silent VisInGraphTests.pro
   - make
+  - ./VisInGraphTests
+
+after_success:
+  - coveralls --exclude lib --exclude tests --gcov-options '\-lp'
