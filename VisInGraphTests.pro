@@ -4,7 +4,7 @@ QT += testlib
 
 SOURCES += test/main.cpp
 
-SOURCES -= main.cpp
+SOURCES -= src/main.cpp
 
 QMAKE_CXXFLAGS += -fprofile-arcs -ftest-coverage
 LIBS += -lgcov

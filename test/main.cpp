@@ -1,6 +1,6 @@
 #include <QTest>
 
-#include <algorithm> # std::max
+#include <algorithm> // std::max
 
 int main()
 {
