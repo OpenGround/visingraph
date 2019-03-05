@@ -3,16 +3,23 @@
 
 #include <utility> //std::pair
 #include <vector> //std::vector
+#include <set> //std::set
+
+using vertex = std::size_t;
 
 
 class Graph
 {
 public:
     Graph();
+    vertex add_vertex();
+    void remove_vertex(vertex v);
+    bool add_edge(vertex u, vertex v);
+
 
 private:
-    std::vector<std::size_t> vertices;
-    std::vector<std::pair<std::size_t, std::size_t>> edges;
+    std::vector<vertex> vertices;
+    std::set<std::pair<vertex, vertex>> edges;
 };
 
 #endif // GRAPH_H
