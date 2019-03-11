@@ -7,6 +7,10 @@ Graph::Graph()
 
 }
 
+/*!
+ * \brief Graph::add_vertex
+ * \return The added vertex
+ */
 vertex Graph::add_vertex()
 {
     if(vertices.empty())
@@ -25,7 +29,7 @@ vertex Graph::add_vertex()
     {
         if(vertices[i] > i)
         {
-            vertices.insert(vertices.begin()+i, i);
+            vertices.insert(vertices.begin() + i, i);
             return i;
         }
     }
