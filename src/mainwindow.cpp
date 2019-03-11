@@ -6,9 +6,13 @@ MainWindow::MainWindow(QWidget *parent) :
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+    mainWidget = new MainWidget;
+    setCentralWidget(mainWidget);
+
 }
 
 MainWindow::~MainWindow()
 {
+    delete mainWidget;
     delete ui;
 }

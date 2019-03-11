@@ -11,15 +11,24 @@
     for the graphical representation.
 
  */
+
+namespace Ui {
+class MainWidget;
+}
+
 class MainWidget : public QWidget
 {
     Q_OBJECT
 public:
     explicit MainWidget(QWidget *parent = nullptr);
+    ~MainWidget();
 
 signals:
 
 public slots:
+
+private:
+    Ui::MainWidget *ui;
 };
 
 #endif // MAINWIDGET_H
