@@ -16,6 +16,9 @@ public:
     void remove_vertex(vertex v);
     bool add_edge(vertex u, vertex v);
 
+    std::vector<vertex> get_vertices() {return vertices;}
+    std::set<std::pair<vertex, vertex>> get_edges() {return edges;}
+
 
 private:
     std::vector<vertex> vertices;

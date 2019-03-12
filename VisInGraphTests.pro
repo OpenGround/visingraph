@@ -2,7 +2,8 @@ include(VisInGraph.pri)
 
 QT += testlib
 
-SOURCES += test/main.cpp
+SOURCES += test/main.cpp \
+    test/testgraph.cpp
 
 SOURCES -= src/main.cpp
 
@@ -11,3 +12,6 @@ LIBS += -lgcov
 
 # qmake defaults to adding -O2 when compiling, which can cause gcov to miss that some lines were optimised out.
 QMAKE_CXXFLAGS_RELEASE -= -O2
+
+HEADERS += \
+    test/testgraph.h

@@ -21,8 +21,9 @@ vertex Graph::add_vertex()
 
     if(vertices.size() - 1 == vertices[vertices.size() - 1])
     {
-        vertices.push_back(vertices.size());
-        return vertices.size();
+        vertex v = vertices.size();
+        vertices.push_back(v);
+        return v;
     }
 
     for(vertex i = 0; i < vertices.size(); i++)
@@ -43,7 +44,14 @@ vertex Graph::add_vertex()
  */
 void Graph::remove_vertex(vertex v)
 {
-    std::remove_if(vertices.begin(), vertices.end(), [v](vertex& t) {return t==v;});
+    for(std::size_t i = 0; i < vertices.size(); ++i)
+    {
+        if(vertices[i] == v)
+        {
+            vertices.erase(vertices.begin() + i);
+            i--;
+        }
+    }
     for(auto edge = edges.begin(); edge != edges.end(); ++edge)
     {
         if(edge->first == v || edge->second == v)
