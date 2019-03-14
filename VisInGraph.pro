@@ -39,7 +39,7 @@ QMAKE_CXXFLAGS += \
     -Wall \
     -Wextra \
     -Wpedantic \
-    --std=c++17
+    --std=c++11
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
