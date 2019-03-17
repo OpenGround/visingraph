@@ -100,7 +100,7 @@ bool Graph::add_edge(vertex u, vertex v)
 
 void Graph::remove_edge(vertex u, vertex v)
 {
-    auto edge = std::minmax(u, v);
+    std::pair<vertex, vertex> edge = std::minmax(u, v);
     auto range = std::equal_range(edges.begin(), edges.end(), edge);
     edges.erase(range.first, range.second);
 }
