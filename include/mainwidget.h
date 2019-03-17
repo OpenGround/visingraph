@@ -2,6 +2,7 @@
 #define MAINWIDGET_H
 
 #include <QWidget>
+#include "include/graph.h"
 /*!
     \class MainWidget
     \brief The MainWidget class represents the main widget for the application.
@@ -26,9 +27,11 @@ public:
 signals:
 
 public slots:
+//    void reactToMousePress();
 
 private:
     Ui::MainWidget *ui;
+    Graph currentGraph;
 };
 
 #endif // MAINWIDGET_H
