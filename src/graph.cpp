@@ -38,6 +38,25 @@ vertex Graph::add_vertex()
     return -1;
 }
 
+bool Graph::add_vertex(vertex v)
+{
+    for(vertex i = 0; i < vertices.size(); i++)
+    {
+        if(vertices[i] == v)
+        {
+            return false;
+        }
+        if(vertices[i] > v)
+        {
+            vertices.insert(vertices.begin() + i, v);
+            return true;
+        }
+    }
+
+    vertices.push_back(v);
+    return true;
+}
+
 /*!
  * \brief Graph::remove_vertex
  * \param v The vertex to be removed
@@ -77,4 +96,11 @@ bool Graph::add_edge(vertex u, vertex v)
         return true;
     }
     return false;
+}
+
+void Graph::remove_edge(vertex u, vertex v)
+{
+    auto edge = std::minmax(u, v);
+    auto range = std::equal_range(edges.begin(), edges.end(), edge);
+    edges.erase(range.first, range.second);
 }

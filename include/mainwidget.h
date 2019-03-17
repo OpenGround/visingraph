@@ -27,7 +27,10 @@ public:
 signals:
 
 public slots:
-//    void reactToMousePress();
+    void addNode(vertex);
+    void deleteNode(vertex);
+    void addEdge(vertex, vertex);
+    void deleteEdge(vertex, vertex);
 
 private:
     Ui::MainWidget *ui;
