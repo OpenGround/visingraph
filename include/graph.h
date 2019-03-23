@@ -4,6 +4,7 @@
 #include <utility> //std::pair
 #include <vector> //std::vector
 #include <set> //std::set
+#include <map> //std::map
 
 using vertex = std::size_t;
 
@@ -12,19 +13,19 @@ class Graph
 {
 public:
     Graph();
-    vertex add_vertex();
-    bool add_vertex(vertex);
-    void remove_vertex(vertex v);
-    bool add_edge(vertex u, vertex v);
-    void remove_edge(vertex u, vertex v);
+    vertex addVertex();
+    bool addVertex(vertex);
+    void removeVertex(vertex v);
+    bool addEdge(vertex u, vertex v);
+    void removeEdge(vertex u, vertex v);
 
-    std::vector<vertex> get_vertices() {return vertices;}
-    std::set<std::pair<vertex, vertex>> get_edges() {return edges;}
+    std::vector<vertex> getVertices() {return vertices;}
+    std::map<vertex, std::set<vertex>> getEdges() {return edges;}
 
 
 private:
     std::vector<vertex> vertices;
-    std::set<std::pair<vertex, vertex>> edges;
+    std::map<vertex, std::set<vertex>> edges;
 };
 
 #endif // GRAPH_H

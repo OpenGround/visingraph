@@ -5,26 +5,37 @@ LGraphRepresentation::LGraphRepresentation()
 
 }
 
-bool LGraphRepresentation::generate_from_graph(Graph& graph)
+bool LGraphRepresentation::generateFromGraph(Graph& graph)
 {
-    return generate_from_graph_BF(graph);
+    return generateFromGraphBF(graph);
 }
 
 /*!
  * \brief LGraphRepresentation::generate_from_graph_BF
- * Attempt to create graph by brute-forcing all possible
+ * Attempt to create the representation by checking all possible
  * (n!)^2 combinations
  * \param graph The graph which is to be represented
  */
-bool LGraphRepresentation::generate_from_graph_BF(Graph& graph)
+bool LGraphRepresentation::generateFromGraphBF(Graph& graph)
 {
-    std::vector<vertex> vertices_x = graph.get_vertices();
-    std::vector<vertex> vertices_y = graph.get_vertices();
-    std::set<std::pair<vertex, vertex>> edges = graph.get_edges();
+    std::vector<vertex> vertices_x = graph.getVertices();
+    std::vector<vertex> vertices_y = graph.getVertices();
+    std::map<vertex, std::set<vertex>> edges = graph.getEdges();
 
-    do {
-        // TODO
-    } while(std::next_permutation(vertices_x.begin(), vertices_x.end()));
+    std::map<vertex, std::vector<vertex>> satisfied_edges;
+
+    do
+    {
+        do
+        {
+
+
+
+
+        }
+        while(std::next_permutation(vertices_y.begin(), vertices_y.end()));
+    }
+    while(std::next_permutation(vertices_x.begin(), vertices_x.end()));
 
     return true;
 }

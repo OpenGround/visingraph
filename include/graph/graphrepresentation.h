@@ -9,7 +9,7 @@ class GraphRepresentation
 public:
     GraphRepresentation();
     virtual ~GraphRepresentation() {}
-    virtual bool generate_from_graph(Graph&) = 0;
+    virtual bool generateFromGraph(Graph&) = 0;
     virtual void draw(QGraphicsView&) = 0;
 };
 

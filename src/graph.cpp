@@ -8,14 +8,15 @@ Graph::Graph()
 }
 
 /*!
- * \brief Graph::add_vertex
+ * \brief Graph::addVertex
  * \return The added vertex
  */
-vertex Graph::add_vertex()
+vertex Graph::addVertex()
 {
     if(vertices.empty())
     {
         vertices.push_back(0);
+        edges.insert(std::make_pair(0, std::set<vertex>()));
         return 0;
     }
 
@@ -23,6 +24,7 @@ vertex Graph::add_vertex()
     {
         vertex v = vertices.size();
         vertices.push_back(v);
+        edges.insert(std::make_pair(v, std::set<vertex>()));
         return v;
     }
 
@@ -31,6 +33,7 @@ vertex Graph::add_vertex()
         if(vertices[i] > i)
         {
             vertices.insert(vertices.begin() + i, i);
+            edges.insert(std::make_pair(i, std::set<vertex>()));
             return i;
         }
     }
@@ -38,7 +41,7 @@ vertex Graph::add_vertex()
     return -1;
 }
 
-bool Graph::add_vertex(vertex v)
+bool Graph::addVertex(vertex v)
 {
     for(vertex i = 0; i < vertices.size(); i++)
     {
@@ -49,58 +52,68 @@ bool Graph::add_vertex(vertex v)
         if(vertices[i] > v)
         {
             vertices.insert(vertices.begin() + i, v);
+            edges.insert(std::make_pair(v, std::set<vertex>()));
             return true;
         }
     }
 
     vertices.push_back(v);
+    edges.insert(std::make_pair(v, std::set<vertex>()));
     return true;
 }
 
 /*!
- * \brief Graph::remove_vertex
+ * \brief Graph::removeVertex
  * \param v The vertex to be removed
  */
-void Graph::remove_vertex(vertex v)
+void Graph::removeVertex(vertex v)
 {
-    for(std::size_t i = 0; i < vertices.size(); ++i)
+    if(std::find(vertices.begin(), vertices.end(), v) == vertices.end())
     {
-        if(vertices[i] == v)
-        {
-            vertices.erase(vertices.begin() + i);
-            i--;
-        }
+        return;
     }
-    for(auto edge = edges.begin(); edge != edges.end(); ++edge)
+
+    // Remove the vertex and shrink the container
+    vertices.erase(std::remove(vertices.begin(), vertices.end(), v), vertices.end());
+
+    if(edges.count(v) == 0)
     {
-        if(edge->first == v || edge->second == v)
-        {
-            edges.erase(edge);
-            edge--;
-        }
+        return;
     }
+
+    auto neighbours = edges.at(v);
+    for(vertex n: neighbours)
+    {
+        edges.at(n).erase(v);
+    }
+
+    edges.erase(v);
 }
 
 /*!
- * \brief Graph::add_edge
+ * \brief Graph::addEdge
  * \param u A possible vertex
  * \param v A possible vertex
  * \return true if both vertices exist in the graph and the edge didn't already exist
  */
-bool Graph::add_edge(vertex u, vertex v)
+bool Graph::addEdge(vertex u, vertex v)
 {
     if(std::binary_search(vertices.begin(), vertices.end(), u) &&
        std::binary_search(vertices.begin(), vertices.end(), v))
     {
-        edges.insert(std::minmax(u,v));
+        edges.at(u).insert(v);
+        edges.at(v).insert(u);
         return true;
     }
     return false;
 }
 
-void Graph::remove_edge(vertex u, vertex v)
+void Graph::removeEdge(vertex u, vertex v)
 {
-    std::pair<vertex, vertex> edge = std::minmax(u, v);
-    auto range = std::equal_range(edges.begin(), edges.end(), edge);
-    edges.erase(range.first, range.second);
+    try {
+        edges.at(u).erase(v);
+        edges.at(v).erase(u);
+    } catch (std::out_of_range) {
+
+    }
 }

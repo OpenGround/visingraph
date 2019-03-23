@@ -7,11 +7,11 @@ class LGraphRepresentation: public GraphRepresentation
 {
 public:
     LGraphRepresentation();
-    bool generate_from_graph(Graph&) override;
+    bool generateFromGraph(Graph&) override;
     void draw(QGraphicsView &) override;
 
 private:
-    bool generate_from_graph_BF(Graph&);
+    bool generateFromGraphBF(Graph&);
 };
 
 #endif // LGRAPHREPRESENTATION_H

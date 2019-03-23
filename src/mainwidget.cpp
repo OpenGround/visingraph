@@ -9,22 +9,22 @@ MainWidget::MainWidget(QWidget *parent) : QWidget(parent), ui(new Ui::MainWidget
 
 void MainWidget::addNode(vertex v)
 {
-    currentGraph.add_vertex(v);
+    currentGraph.addVertex(v);
 }
 
 void MainWidget::deleteNode(vertex v)
 {
-    currentGraph.remove_vertex(v);
+    currentGraph.removeVertex(v);
 }
 
 void MainWidget::addEdge(vertex u, vertex v)
 {
-    currentGraph.add_edge(u, v);
+    currentGraph.addEdge(u, v);
 }
 
 void MainWidget::deleteEdge(vertex u, vertex v)
 {
-    currentGraph.remove_edge(u, v);
+    currentGraph.removeEdge(u, v);
 }
 
 MainWidget::~MainWidget()
