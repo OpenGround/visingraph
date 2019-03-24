@@ -39,7 +39,14 @@
      <item row="0" column="2">
       <layout class="QGridLayout" name="gridLayout_5">
        <item row="0" column="0">
-        <widget class="QGraphicsView" name="outputGraphicsView"/>
+        <widget class="OutputGraphicsView" name="outputGraphicsView">
+         <property name="verticalScrollBarPolicy">
+          <enum>Qt::ScrollBarAlwaysOff</enum>
+         </property>
+         <property name="horizontalScrollBarPolicy">
+          <enum>Qt::ScrollBarAlwaysOff</enum>
+         </property>
+        </widget>
        </item>
       </layout>
      </item>
@@ -80,6 +87,11 @@
    <class>InputGraphicsView</class>
    <extends>QGraphicsView</extends>
    <header>include/ui/inputgraphicsview.h</header>
+  </customwidget>
+  <customwidget>
+   <class>OutputGraphicsView</class>
+   <extends>QGraphicsView</extends>
+   <header>include/ui/outputgraphicsview.h</header>
   </customwidget>
  </customwidgets>
  <resources/>

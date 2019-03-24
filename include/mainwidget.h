@@ -2,6 +2,7 @@
 #define MAINWIDGET_H
 
 #include <QWidget>
+#include <QGraphicsScene>
 #include "include/graph.h"
 /*!
     \class MainWidget
@@ -17,6 +18,11 @@ namespace Ui {
 class MainWidget;
 }
 
+enum class Representation : uint
+{
+    L_GRAPH = 0
+};
+
 class MainWidget : public QWidget
 {
     Q_OBJECT
@@ -31,8 +37,11 @@ public slots:
     void deleteNode(vertex);
     void addEdge(vertex, vertex);
     void deleteEdge(vertex, vertex);
+    void convert();
 
 private:
+    void initChoices();
+    void initConnections();
     Ui::MainWidget *ui;
     Graph currentGraph;
 };

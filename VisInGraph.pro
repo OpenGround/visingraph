@@ -27,7 +27,8 @@ SOURCES += \
     src/mainwidget.cpp \
     src/ui/inputgraphicsview.cpp \
     src/graph/graphrepresentation.cpp \
-    src/graph/lgraphrepresentation.cpp
+    src/graph/lgraphrepresentation.cpp \
+    src/ui/outputgraphicsview.cpp
 
 HEADERS += \
     include/graph.h \
@@ -35,7 +36,8 @@ HEADERS += \
     include/mainwidget.h \
     include/ui/inputgraphicsview.h \
     include/graph/graphrepresentation.h \
-    include/graph/lgraphrepresentation.h
+    include/graph/lgraphrepresentation.h \
+    include/ui/outputgraphicsview.h
 
 FORMS += \
     ui/mainwindow.ui \

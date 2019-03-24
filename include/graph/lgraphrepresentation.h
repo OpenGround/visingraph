@@ -33,10 +33,14 @@ public:
     bool generateFromGraph(Graph&) override;
     void draw(QGraphicsView &) override;
 
+public slots:
+    void stopCalculation() override { aborted = true; }
+
 private:
     bool generateFromGraphBF(Graph&);
     bool isRepresentationViable(std::map<vertex, std::set<vertex>> edges);
     std::vector<LNode> representation;
+    bool aborted = false;
 
 
 };

@@ -9,6 +9,7 @@ SOURCES += \
     src/mainwindow.cpp \
     src/mainwidget.cpp \
     src/ui/inputgraphicsview.cpp \
+    src/ui/outputgraphicsview.cpp \
     src/graph/graphrepresentation.cpp \
     src/graph/lgraphrepresentation.cpp
 
@@ -17,6 +18,7 @@ HEADERS += \
     include/mainwindow.h \
     include/mainwidget.h \
     include/ui/inputgraphicsview.h \
+    include/ui/outputgraphicsview.h \
     include/graph/graphrepresentation.h \
     include/graph/lgraphrepresentation.h
 

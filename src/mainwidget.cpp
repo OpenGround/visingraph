@@ -1,11 +1,54 @@
 #include "include/mainwidget.h"
 #include "ui_mainwidget.h"
 
+#include "include/graph/lgraphrepresentation.h"
+
+#include <QMessageBox>
+
 
 MainWidget::MainWidget(QWidget *parent) : QWidget(parent), ui(new Ui::MainWidget)
 {
     ui->setupUi(this);
+
+    initChoices();
+    initConnections();
 }
+
+void MainWidget::initChoices()
+{
+    ui->graphRepresentationComboBox->addItem(tr("L-Graph"), static_cast<int>(Representation::L_GRAPH));
+}
+
+void MainWidget::initConnections()
+{
+    connect(ui->conversionButton, SIGNAL(clicked()), this, SLOT(convert()));
+
+    connect(ui->inputGraphicsView, SIGNAL(nodeAdded(vertex)), this, SLOT(addNode(vertex)));
+    connect(ui->inputGraphicsView, SIGNAL(nodeDeleted(vertex)), this, SLOT(deleteNode(vertex)));
+    connect(ui->inputGraphicsView, SIGNAL(edgeAdded(vertex, vertex)), this, SLOT(addEdge(vertex, vertex)));
+    connect(ui->inputGraphicsView, SIGNAL(edgeDeleted(vertex, vertex)), this, SLOT(deleteEdge(vertex, vertex)));
+}
+
+void MainWidget::convert()
+{
+    Representation repr = static_cast<Representation>(ui->graphRepresentationComboBox->currentData().toInt());
+
+    switch (repr) {
+    case Representation::L_GRAPH:
+    LGraphRepresentation representation;
+    if (representation.generateFromGraph(currentGraph))
+    {
+        representation.draw(*(ui->outputGraphicsView));
+    }
+    else
+    {
+        QMessageBox::warning(this, tr("No representation exists"), tr("No representation was found for this graph"));
+    }
+
+    break;
+    };
+}
+
 
 void MainWidget::addNode(vertex v)
 {
