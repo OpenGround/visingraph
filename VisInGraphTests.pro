@@ -3,7 +3,8 @@ include(VisInGraph.pri)
 QT += testlib
 
 SOURCES += test/main.cpp \
-    test/testgraph.cpp
+    test/testgraph.cpp \
+    test/testlgraphrepresentation.cpp
 
 SOURCES -= src/main.cpp
 
@@ -14,4 +15,5 @@ LIBS += -lgcov
 QMAKE_CXXFLAGS_RELEASE -= -O2
 
 HEADERS += \
-    test/testgraph.h
+    test/testgraph.h \
+    test/testlgraphrepresentation.h

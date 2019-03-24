@@ -8,7 +8,7 @@ class TestGraph : public QObject
 {
     Q_OBJECT
 public:
-    explicit TestGraph(QObject *parent = 0);
+    explicit TestGraph(QObject *parent = nullptr);
 
 signals:
 

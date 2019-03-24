@@ -1,4 +1,5 @@
 #include "testgraph.h"
+#include "testlgraphrepresentation.h"
 
 #include <QTest>
 
@@ -10,6 +11,9 @@ int main()
 
     TestGraph testgraph;
     retval = std::max(QTest::qExec(&testgraph), retval);
+
+    TestLGraphRepresentation testlgraphrepresentation;
+    retval = std::max(QTest::qExec(&testlgraphrepresentation), retval);
 
     return retval;
 }

@@ -25,7 +25,7 @@ public:
 
 private:
     std::vector<vertex> vertices;
-    std::map<vertex, std::set<vertex>> edges;
+    std::map<vertex, std::set<vertex>> edges; //as a set of neighbours
 };
 
 #endif // GRAPH_H
