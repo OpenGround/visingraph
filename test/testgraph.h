@@ -16,6 +16,7 @@ private slots:
     void test_add_vertex();
     void test_remove_vertex();
     void test_add_remove_vertex();
+    void testAddRemoveEdge();
 };
 
 #endif // TESTGRAPH_H

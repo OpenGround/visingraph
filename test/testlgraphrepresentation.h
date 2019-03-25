@@ -14,6 +14,7 @@ private slots:
     void testGenerateI4Representation();
     void testGenerateK4Representation();
     void testGenerateC4Representation();
+    void testFailToGenerateI21Representation();
 };
 
 #endif // TESTLGRAPHREPRESENTATION_H

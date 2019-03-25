@@ -14,6 +14,12 @@ void TestGraph::test_add_vertex()
     QCOMPARE(g.addVertex(), (vertex)1);
     QCOMPARE(g.addVertex(), (vertex)2);
     QCOMPARE(g.addVertex(), (vertex)3);
+
+    QCOMPARE(g.addVertex(2), false);
+    QCOMPARE(g.addVertex(5), true);
+    QCOMPARE(g.addVertex(), (vertex)4);
+    QCOMPARE(g.addVertex(), (vertex)6);
+
 }
 
 
@@ -42,4 +48,24 @@ void TestGraph::test_remove_vertex()
 
 }
 
+void TestGraph::testAddRemoveEdge()
+{
+    Graph g;
+    g.removeEdge(0,1);
+    QCOMPARE(g.addEdge(0,1), false);
+    g.addVertex(1234);
+    g.addVertex(9876);
+    QCOMPARE(g.addEdge(1234, 9876), true);
+    QCOMPARE(g.getEdges().at(9876).size(), (std::size_t)1);
+    QCOMPARE(g.getEdges().at(1234).size(), (std::size_t)1);
+    //The edge exists after the insertion, so it returns true
+    QCOMPARE(g.addEdge(9876, 1234), true);
+    QCOMPARE(g.getEdges().at(9876).size(), (std::size_t)1);
+    QCOMPARE(g.getEdges().at(1234).size(), (std::size_t)1);
+    g.removeEdge(9876, 1234);
+    QCOMPARE(g.getEdges().at(9876).size(), (std::size_t)1);
+    QCOMPARE(g.getEdges().at(1234).size(), (std::size_t)1);
+
+
+}
 
