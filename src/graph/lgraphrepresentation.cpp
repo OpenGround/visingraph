@@ -1,6 +1,7 @@
 #include "include/graph/lgraphrepresentation.h"
 
 #include <QCoreApplication>
+#include <QGraphicsSimpleTextItem>
 #include <QMessageBox>
 #include <QProgressDialog>
 
@@ -181,6 +182,7 @@ void LGraphRepresentation::draw(QGraphicsView& view)
 
 
     constexpr qreal BORDER = 10;
+    constexpr qreal FONT_SIZE = 10;
     qreal top = rect.top() + BORDER, left = rect.left() + BORDER;
     qreal width = view.size().width() - 2 * BORDER, height = view.size().height() - 2 * BORDER;
     qreal unit_width = width / (node_nr);
@@ -196,6 +198,11 @@ void LGraphRepresentation::draw(QGraphicsView& view)
 
         scene->addLine(node_x, node_y, node_x + node_width, node_y);
         scene->addLine(node_x, node_y - node_height, node_x, node_y);
+
+        QGraphicsSimpleTextItem* text = scene->addSimpleText(QString::number(node.v));
+        text->setX(node_x+1.5*FONT_SIZE);
+        text->setY(node_y-2*FONT_SIZE);
+
     }
 
 }

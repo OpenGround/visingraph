@@ -12,7 +12,7 @@
 #include "include/graph.h"
 
 using GraphicsEdge = std::tuple<QGraphicsLineItem*, std::size_t, std::size_t>;
-using GraphicsNode = std::pair<QGraphicsEllipseItem*, std::size_t>;
+using GraphicsNode = std::tuple<QGraphicsEllipseItem*, QGraphicsSimpleTextItem*, std::size_t>;
 
 
 class InputGraphicsView : public QGraphicsView
@@ -47,7 +47,7 @@ private: // members
     QGraphicsScene scene;
     GraphicsNode *highlightedNode = nullptr;
 
-    static constexpr qreal NODE_RADIUS = 6;
+    static constexpr qreal NODE_RADIUS = 10;
 };
 
 #endif // INPUTGRAPHICSVIEW_H
