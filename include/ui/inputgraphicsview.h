@@ -47,7 +47,13 @@ private: // members
     QGraphicsScene scene;
     GraphicsNode *highlightedNode = nullptr;
 
+    // The radius of displayed nodes
     static constexpr qreal NODE_RADIUS = 10;
+
+    // As it's difficult to click precisely on an edge, there is a small radius
+    // around the edge in which the clicks count as if the user clicked on the edge
+    static constexpr qreal EDGE_RANGE = 3;
+
 };
 
 #endif // INPUTGRAPHICSVIEW_H

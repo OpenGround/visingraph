@@ -9,6 +9,7 @@
 MainWidget::MainWidget(QWidget *parent) : QWidget(parent), ui(new Ui::MainWidget)
 {
     ui->setupUi(this);
+    progress = nullptr;
 
     initChoices();
     initConnections();
@@ -36,6 +37,10 @@ void MainWidget::convert()
     switch (repr) {
     case Representation::L_GRAPH:
     LGraphRepresentation representation;
+    connect(&representation, SIGNAL(calculationStarted(int)), this, SLOT(startCalc(int)));
+    connect(&representation, SIGNAL(calculationTick()), this, SLOT(tick()));
+    connect(&representation, SIGNAL(calculationFinished(int)), this, SLOT(stopCalc(int)));
+    connect(this, SIGNAL(abortedCalculation()), &representation, SLOT(stopCalculation()));
     if (representation.generateFromGraph(currentGraph))
     {
         representation.draw(*(ui->outputGraphicsView));
@@ -68,6 +73,37 @@ void MainWidget::addEdge(vertex u, vertex v)
 void MainWidget::deleteEdge(vertex u, vertex v)
 {
     currentGraph.removeEdge(u, v);
+}
+
+void MainWidget::startCalc(int maxTicks)
+{
+    if(progress != nullptr)
+        delete progress;
+
+    progress = new QProgressDialog("", "Cancel", 0, maxTicks, this);
+    connect(progress, SIGNAL(canceled()), this, SLOT(abortCalc()));
+    progress->setValue(0);
+    QApplication::processEvents();
+}
+
+void MainWidget::tick()
+{
+    if(progress == nullptr)
+        return;
+
+    std::cout << "tick " << progress->value()+1 <<"/"<< progress->maximum() << std::endl;
+    progress->setValue(progress->value()+1);
+    QApplication::processEvents();
+}
+
+void MainWidget::stopCalc(int maxTicks)
+{
+    if(progress == nullptr)
+        return;
+
+    progress->setValue(maxTicks);
+    delete progress;
+    progress = nullptr;
 }
 
 MainWidget::~MainWidget()

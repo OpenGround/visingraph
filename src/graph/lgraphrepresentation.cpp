@@ -41,6 +41,7 @@ bool LGraphRepresentation::generateFromGraphBF(Graph& graph)
     if(size > 20)
     {
         // 21! > 2^64, although I would estimate that at most 11-12 is feasible
+        // to be run in a decent timeframe
         emit graphTooBig();
         return false;
     }
@@ -56,6 +57,7 @@ bool LGraphRepresentation::generateFromGraphBF(Graph& graph)
 
     do
     {
+        vertices_y = vertices_x;
         do
         {
             // Let other events process so that the program doesn't stop responding
@@ -179,7 +181,6 @@ void LGraphRepresentation::draw(QGraphicsView& view)
     // No vertices - there is nothing to draw
     if(node_nr == 0)
         return;
-
 
     constexpr qreal BORDER = 10;
     constexpr qreal FONT_SIZE = 10;

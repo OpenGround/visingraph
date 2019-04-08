@@ -3,6 +3,7 @@
 
 #include <QWidget>
 #include <QGraphicsScene>
+#include <QProgressDialog>
 #include "include/graph.h"
 /*!
     \class MainWidget
@@ -31,6 +32,7 @@ public:
     ~MainWidget();
 
 signals:
+    void abortedCalculation();
 
 public slots:
     void addNode(vertex);
@@ -38,12 +40,17 @@ public slots:
     void addEdge(vertex, vertex);
     void deleteEdge(vertex, vertex);
     void convert();
+    void startCalc(int);
+    void tick();
+    void stopCalc(int);
+    void abortCalc() {emit abortedCalculation();}
 
 private:
     void initChoices();
     void initConnections();
     Ui::MainWidget *ui;
     Graph currentGraph;
+    QProgressDialog *progress;
 };
 
 #endif // MAINWIDGET_H

@@ -17,42 +17,43 @@ void InputGraphicsView::resizeEvent(QResizeEvent* event)
 
 void InputGraphicsView::mousePressEvent(QMouseEvent *event)
 {
-    auto intersecting_node = std::find_if(nodes.begin(), nodes.end(), [&event](GraphicsNode i){return std::get<0>(i)->contains(event->localPos())||std::get<1>(i)->contains(event->localPos());});
-    auto intersecting_edge = std::find_if(edges.begin(), edges.end(), [&event](GraphicsEdge i){return std::get<0>(i)->contains(event->localPos());});
+    auto intersectingNode = std::find_if(nodes.begin(), nodes.end(), [&event](GraphicsNode i){return std::get<0>(i)->contains(event->localPos())||std::get<1>(i)->contains(event->localPos());});
+    auto intersectingNodeWithNew = std::find_if(nodes.begin(), nodes.end(), [&event](GraphicsNode i){QGraphicsEllipseItem item(event->localPos().x()-NODE_RADIUS, event->localPos().y()-NODE_RADIUS, 2*NODE_RADIUS, 2*NODE_RADIUS); return std::get<0>(i)->collidesWithItem(&item);});
+    auto intersectingEdge = std::find_if(edges.begin(), edges.end(), [&event](GraphicsEdge i){QGraphicsEllipseItem item(event->localPos().x()-EDGE_RANGE, event->localPos().y()-EDGE_RANGE, 2*EDGE_RANGE, 2*EDGE_RANGE); return std::get<0>(i)->collidesWithItem(&item);});
 
     bool leftButton = event->button() == Qt::LeftButton;
     bool rightButton = event->button() == Qt::RightButton;
 
-    if(intersecting_edge == edges.end() && intersecting_node == nodes.end())
+    if(intersectingEdge == edges.end() && intersectingNode == nodes.end())
     {
-        if(!hasHighlightedNode() && leftButton)
+        if(!hasHighlightedNode() && leftButton && intersectingNodeWithNew == nodes.end())
             addNode(event->localPos());
         else
             dehighlightNode();
     }
-    else if(intersecting_edge == edges.end())
+    else if(intersectingNode == nodes.end() && rightButton)
+    {
+        deleteEdge(intersectingEdge);
+        dehighlightNode();
+    }
+    else if(intersectingNode != nodes.end())
     {
         if(rightButton)
         {
             dehighlightNode();
-            deleteNode(intersecting_node);
+            deleteNode(intersectingNode);
             return;
         }
 
         if(highlightedNode == nullptr)
         {
-            highlightNode(&(*intersecting_node));
+            highlightNode(&(*intersectingNode));
         }
-        else if(highlightedNode != &(*intersecting_node))
+        else if(highlightedNode != &(*intersectingNode))
         {
-            addEdge(highlightedNode, &(*intersecting_node));
+            addEdge(highlightedNode, &(*intersectingNode));
             dehighlightNode();
         }
-    }
-    else if(intersecting_node == nodes.end() && rightButton)
-    {
-        deleteEdge(intersecting_edge);
-        dehighlightNode();
     }
 
     scene.update();
