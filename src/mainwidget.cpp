@@ -5,6 +5,8 @@
 
 #include <QMessageBox>
 
+#include <iostream>
+
 
 MainWidget::MainWidget(QWidget *parent) : QWidget(parent), ui(new Ui::MainWidget)
 {
@@ -91,7 +93,6 @@ void MainWidget::tick()
     if(progress == nullptr)
         return;
 
-    std::cout << "tick " << progress->value()+1 <<"/"<< progress->maximum() << std::endl;
     progress->setValue(progress->value()+1);
     QApplication::processEvents();
 }
