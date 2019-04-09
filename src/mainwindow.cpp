@@ -7,6 +7,7 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
     mainWidget = new MainWidget;
+    connect(ui->continueCalcAction, SIGNAL(triggered()), mainWidget, SLOT(loadCalculationState()));
     setCentralWidget(mainWidget);
 
 }

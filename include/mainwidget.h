@@ -31,6 +31,8 @@ public:
     explicit MainWidget(QWidget *parent = nullptr);
     ~MainWidget();
 
+    void calculateFrom(Representation, std::vector<vertex>, std::vector<vertex>, Graph&);
+
 signals:
     void abortedCalculation();
 
@@ -41,9 +43,11 @@ public slots:
     void deleteEdge(vertex, vertex);
     void convert();
     void startCalc(int);
-    void tick();
+    void tick(int);
     void stopCalc(int);
     void abortCalc() {emit abortedCalculation();}
+    void saveLGraphCalculationState(std::vector<vertex>, std::vector<vertex>);
+    void loadCalculationState();
 
 private:
     void initChoices();

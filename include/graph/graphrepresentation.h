@@ -17,7 +17,7 @@ public:
 signals:
     void graphTooBig();
     void calculationStarted(int maxTicks);
-    void calculationTick();
+    void calculationTick(int ticksElapsed);
     void calculationFinished(int maxTicks);
 
 public slots:

@@ -10,6 +10,29 @@ std::size_t factorial(std::size_t n)
     return n>1 ? n*factorial(n-1) : 1;
 }
 
+/*!
+ * \brief rankPermutation
+ * The algorithm to rank permutations as formulated by Martin Mares in http://mj.ucw.cz/papers/rank.ps
+ * The implementation isn't completely linear, but is at most O(n^2)
+ * \param permutation
+ * \param i
+ * \param n
+ * \return
+ */
+std::size_t rankPermutation(std::vector<vertex> permutation, std::size_t i, std::size_t n)
+{
+    if (i >= n)
+        return 0;
+
+    std::size_t a = 0;
+    for(std::size_t j = i+1; j < n; ++j)
+    {
+        if(permutation[j] < permutation[i])
+            a++;
+    }
+
+    return a * factorial(n-i-1) + rankPermutation(permutation, i+1, n);
+}
 
 LGraphRepresentation::LGraphRepresentation()
 {
@@ -31,6 +54,12 @@ bool LGraphRepresentation::generateFromGraphBF(Graph& graph)
 {
     std::vector<vertex> vertices_x = graph.getVertices();
     std::vector<vertex> vertices_y = graph.getVertices();
+
+    return generateFromGraphStateBF(graph, vertices_x, vertices_y);
+}
+
+bool LGraphRepresentation::generateFromGraphStateBF(Graph& graph, std::vector<vertex> vertices_x, std::vector<vertex> vertices_y)
+{
     std::map<vertex, std::set<vertex>> edges = graph.getEdges();
 
     bool viable = false;
@@ -48,12 +77,16 @@ bool LGraphRepresentation::generateFromGraphBF(Graph& graph)
 
     std::size_t permutations = factorial(size);
     std::size_t permutationsPerTick = (permutations / INT_MAX) + 1;
+    std::size_t currentPermutation = rankPermutation(vertices_x, 0, size);
     int ticks = static_cast<int>(permutations / permutationsPerTick);
     std::size_t counter = 0;
 
     aborted = false;
 
     emit calculationStarted(ticks);
+
+    // If the calculation has already been started, tick the required number of ticks
+    emit calculationTick(static_cast<int>(currentPermutation/permutationsPerTick));
 
     do
     {
@@ -63,94 +96,110 @@ bool LGraphRepresentation::generateFromGraphBF(Graph& graph)
             // Let other events process so that the program doesn't stop responding
             QCoreApplication::processEvents();
 
-            // Get the coordinates of the midpoints in O(n)
-            std::map<vertex, std::pair<std::size_t, std::size_t>> coordinates;
-            for(std::size_t i = 0; i < vertices_x.size(); ++i)
-            {
-                coordinates.insert(std::make_pair(vertices_x[i], std::make_pair(i, 0)));
-            }
-            for(std::size_t i = 0; i < vertices_x.size(); ++i)
-            {
-                coordinates.at(vertices_y[i]).second = i;
-            }
+            checkBFPermutation(vertices_x, vertices_y, edges);
 
-            representation.clear();
-
-            // Create the representation without any height or length at first
-            for(auto it=coordinates.begin(); it != coordinates.end(); ++it)
-            {
-                LNode n;
-                n.v = it->first;
-                n.x = it->second.first;
-                n.y = it->second.second;
-                representation.push_back(n);
-            }
-
-            // Add the height and length based on the edges in O(n^2*log^2(n))
-            // TODO: the runtime of this could be improved rather easily
-            // Sort by x coordinates and calculate width by simply extending for
-            // as long as possible.
-            std::sort(representation.begin(), representation.end(), [](LNode a, LNode b){return a.x < b.x;});
-            for(auto it=representation.begin(); it!=representation.end(); ++it)
-            {
-                std::size_t width = 0;
-                // If the vertex has no edges, there is no need to extend
-                if(edges.at(it->v).size() > 0)
-                {
-                    for(auto it2=it+1; it2 != representation.end(); ++it2)
-                    {
-                        // If the next node could intersect and they don't have a common
-                        // edge, don't continue with the extension
-                        if(it2->y < it->y && it2->x > it->x && edges.at(it->v).count(it2->v) == 0)
-                        {
-                            break;
-                        }
-                        width++;
-                    }
-                }
-                it->width = width;
-            }
-
-            // Sort by y coordinates and calculate height
-            std::sort(representation.begin(), representation.end(), [](LNode a, LNode b){return a.y < b.y;});
-            for(auto it=representation.begin(); it!=representation.end(); ++it)
-            {
-                std::size_t height = 0;
-                // If the vertex has no edges, there is no need to extend
-                if(edges.at(it->v).size() > 0)
-                {
-                    for(auto it2=it+1; it2 != representation.end(); ++it2)
-                    {
-                        // If the next node's L would intersect and they don't have a common
-                        // edge, don't continue with the extension
-                        if(it2->y < it->y && it2->x < it->x && (it2->x + it2->width) >= it->x && edges.at(it->v).count(it2->v) == 0)
-                        {
-                            break;
-                        }
-                        height++;
-                    }
-                }
-                it->height = height;
-            }
             viable = isRepresentationViable(edges);
         }
         while(!viable && !aborted && std::next_permutation(vertices_y.begin(), vertices_y.end()));
 
         // Update the progress dialog
         counter++;
+        std::cout << counter <<std::endl;
         if(counter == permutationsPerTick)
         {
-            emit calculationTick();
+            emit calculationTick(1);
             counter = 0;
         }
+        std::cout << counter <<std::endl;
 
 
     }
     while(!viable && !aborted && std::next_permutation(vertices_x.begin(), vertices_x.end()));
 
+    if(aborted)
+    {
+        int result = QMessageBox::question(nullptr, "Save the computation state?", "Do you want to save the computation state?", 0, 1);
+        if(result == 1)
+            emit saveState(vertices_x, vertices_y);
+    }
+
     emit calculationFinished(ticks);
 
     return viable;
+}
+
+
+void LGraphRepresentation::checkBFPermutation(std::vector<vertex>& vertices_x, std::vector<vertex>& vertices_y, std::map<vertex, std::set<vertex>> edges)
+{
+    std::map<vertex, std::pair<std::size_t, std::size_t>> coordinates;
+    for(std::size_t i = 0; i < vertices_x.size(); ++i)
+    {
+        coordinates.insert(std::make_pair(vertices_x[i], std::make_pair(i, 0)));
+    }
+    for(std::size_t i = 0; i < vertices_x.size(); ++i)
+    {
+        coordinates.at(vertices_y[i]).second = i;
+    }
+
+    representation.clear();
+
+    // Create the representation without any height or length at first
+    for(auto it=coordinates.begin(); it != coordinates.end(); ++it)
+    {
+        LNode n;
+        n.v = it->first;
+        n.x = it->second.first;
+        n.y = it->second.second;
+        representation.push_back(n);
+    }
+
+    // Add the height and length based on the edges in O(n^2*log^2(n))
+    // TODO: the runtime of this could be improved rather easily
+    // Sort by x coordinates and calculate width by simply extending for
+    // as long as possible.
+    std::sort(representation.begin(), representation.end(), [](LNode a, LNode b){return a.x < b.x;});
+    for(auto it=representation.begin(); it!=representation.end(); ++it)
+    {
+        std::size_t width = 0;
+        // If the vertex has no edges, there is no need to extend
+        if(edges.at(it->v).size() > 0)
+        {
+            for(auto it2=it+1; it2 != representation.end(); ++it2)
+            {
+                // If the next node could intersect and they don't have a common
+                // edge, don't continue with the extension
+                if(it2->y < it->y && it2->x > it->x && edges.at(it->v).count(it2->v) == 0)
+                {
+                    break;
+                }
+                width++;
+            }
+        }
+        it->width = width;
+    }
+
+    // Sort by y coordinates and calculate height
+    std::sort(representation.begin(), representation.end(), [](LNode a, LNode b){return a.y < b.y;});
+    for(auto it=representation.begin(); it!=representation.end(); ++it)
+    {
+        std::size_t height = 0;
+        // If the vertex has no edges, there is no need to extend
+        if(edges.at(it->v).size() > 0)
+        {
+            for(auto it2=it+1; it2 != representation.end(); ++it2)
+            {
+                // If the next node's L would intersect and they don't have a common
+                // edge, don't continue with the extension
+                if(it2->y < it->y && it2->x < it->x && (it2->x + it2->width) >= it->x && edges.at(it->v).count(it2->v) == 0)
+                {
+                    break;
+                }
+                height++;
+            }
+        }
+        it->height = height;
+    }
+
 }
 
 bool LGraphRepresentation::isRepresentationViable(std::map<vertex, std::set<vertex>> edges)

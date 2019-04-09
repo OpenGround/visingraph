@@ -20,9 +20,22 @@
      <x>0</x>
      <y>0</y>
      <width>400</width>
-     <height>20</height>
+     <height>17</height>
     </rect>
    </property>
+   <widget class="QMenu" name="menuVisinGraph">
+    <property name="title">
+     <string>VisinGraph</string>
+    </property>
+   </widget>
+   <widget class="QMenu" name="menuLGraph">
+    <property name="title">
+     <string>LGraph</string>
+    </property>
+    <addaction name="continueCalcAction"/>
+   </widget>
+   <addaction name="menuVisinGraph"/>
+   <addaction name="menuLGraph"/>
   </widget>
   <widget class="QToolBar" name="mainToolBar">
    <attribute name="toolBarArea">
@@ -33,6 +46,11 @@
    </attribute>
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
+  <action name="continueCalcAction">
+   <property name="text">
+    <string>Continue calculation</string>
+   </property>
+  </action>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
  <resources/>

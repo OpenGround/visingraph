@@ -4,6 +4,9 @@
 #include "include/graph/lgraphrepresentation.h"
 
 #include <QMessageBox>
+#include <QTextStream>
+#include <QFile>
+#include <QFileDialog>
 
 #include <iostream>
 
@@ -40,8 +43,9 @@ void MainWidget::convert()
     case Representation::L_GRAPH:
     LGraphRepresentation representation;
     connect(&representation, SIGNAL(calculationStarted(int)), this, SLOT(startCalc(int)));
-    connect(&representation, SIGNAL(calculationTick()), this, SLOT(tick()));
+    connect(&representation, SIGNAL(calculationTick(int)), this, SLOT(tick(int)));
     connect(&representation, SIGNAL(calculationFinished(int)), this, SLOT(stopCalc(int)));
+    connect(&representation, SIGNAL(saveState(std::vector<vertex>, std::vector<vertex>)), this, SLOT(saveLGraphCalculationState(std::vector<vertex>, std::vector<vertex>)));
     connect(this, SIGNAL(abortedCalculation()), &representation, SLOT(stopCalculation()));
     if (representation.generateFromGraph(currentGraph))
     {
@@ -88,12 +92,12 @@ void MainWidget::startCalc(int maxTicks)
     QApplication::processEvents();
 }
 
-void MainWidget::tick()
+void MainWidget::tick(int ticksElapsed)
 {
     if(progress == nullptr)
         return;
 
-    progress->setValue(progress->value()+1);
+    progress->setValue(progress->value()+ticksElapsed);
     QApplication::processEvents();
 }
 
@@ -105,6 +109,101 @@ void MainWidget::stopCalc(int maxTicks)
     progress->setValue(maxTicks);
     delete progress;
     progress = nullptr;
+}
+
+void MainWidget::saveLGraphCalculationState(std::vector<vertex> x_vertices, std::vector<vertex> y_vertices)
+{
+    std::cout << "hi";
+    QFile out(QFileDialog::getSaveFileName(nullptr, "Enter the filename"));
+    if(!out.open(QIODevice::WriteOnly | QIODevice::Text))
+        return;
+
+    QTextStream os(&out);
+    os << "LGraph\n";
+    for(auto x: x_vertices)
+        os << x << " ";
+    os << "\n";
+    for(auto y: y_vertices)
+        os << y << " ";
+    os << "\n";
+
+    auto edges = currentGraph.getEdges();
+
+    os << edges.size() << "\n";
+    for(auto neighbours: edges)
+    {
+        for(auto neighbour: neighbours.second)
+        {
+            if (neighbour > neighbours.first)
+                os << neighbours.first << " " << neighbour << "\n";
+        }
+
+    }
+
+    out.close();
+}
+
+void MainWidget::loadCalculationState()
+{
+    QFile in(QFileDialog::getOpenFileName(nullptr, "Enter the filename"));
+
+    if(!in.open(QIODevice::ReadOnly | QIODevice::Text))
+        return;
+
+    QString line = in.readLine();
+    if(line != "LGraph\n")
+        return;
+
+    std::vector<vertex> x_vertices, y_vertices;
+    line = in.readLine().split('\n')[0];
+    QStringList x = line.split(" ");
+    for(std::size_t i = 0; i < x.size(); ++i)
+    {
+        x_vertices.push_back(x[i].toInt());
+    }
+    line = in.readLine().split('\n')[0];
+    QStringList y = line.split(" ");
+    for(std::size_t i = 0; i < y.size(); ++i)
+    {
+        y_vertices.push_back(y[i].toInt());
+    }
+    line = in.readLine().split('\n')[0];
+    Graph g;
+    for(auto vertex: x_vertices)
+    {
+        g.addVertex(vertex);
+    }
+    std::size_t edgeNr = line.toInt();
+    for(std::size_t i = 0; i < edgeNr; i++)
+    {
+        line = in.readLine().split('\n')[0];
+        QStringList edge = line.split(" ");
+        g.addEdge(edge[0].toInt(), edge[1].toInt());
+    }
+    calculateFrom(Representation::L_GRAPH, x_vertices, y_vertices, g);
+}
+
+void MainWidget::calculateFrom(Representation repr, std::vector<vertex> x_vertices, std::vector<vertex> y_vertices, Graph & g)
+{
+    if(repr != Representation::L_GRAPH)
+        return;
+
+    currentGraph = g;
+
+    LGraphRepresentation representation;
+    connect(&representation, SIGNAL(calculationStarted(int)), this, SLOT(startCalc(int)));
+    connect(&representation, SIGNAL(calculationTick(int)), this, SLOT(tick(int)));
+    connect(&representation, SIGNAL(calculationFinished(int)), this, SLOT(stopCalc(int)));
+    connect(&representation, SIGNAL(saveState(std::vector<vertex>, std::vector<vertex>)), this, SLOT(saveLGraphCalculationState(std::vector<vertex>, std::vector<vertex>)));
+    connect(this, SIGNAL(abortedCalculation()), &representation, SLOT(stopCalculation()));
+    if (representation.generateFromGraphStateBF(currentGraph, x_vertices, y_vertices))
+    {
+        representation.draw(*(ui->outputGraphicsView));
+    }
+    else
+    {
+        QMessageBox::warning(this, tr("No representation exists"), tr("No representation was found for this graph"));
+    }
 }
 
 MainWidget::~MainWidget()

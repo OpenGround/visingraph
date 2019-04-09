@@ -22,7 +22,6 @@ public:
     std::vector<vertex> getVertices() {return vertices;}
     std::map<vertex, std::set<vertex>> getEdges() {return edges;}
 
-
 private:
     std::vector<vertex> vertices;
     std::map<vertex, std::set<vertex>> edges; //as a set of neighbours

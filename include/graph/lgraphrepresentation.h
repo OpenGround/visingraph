@@ -3,6 +3,9 @@
 
 #include "include/graph/graphrepresentation.h"
 
+std::size_t factorial(std::size_t);
+std::size_t rankPermutation(std::vector<vertex>, std::size_t, std::size_t);
+
 struct LNode
 {
     // The corresponding vertex
@@ -28,16 +31,22 @@ struct LNode
 
 class LGraphRepresentation: public GraphRepresentation
 {
+    Q_OBJECT
 public:
     LGraphRepresentation();
     bool generateFromGraph(Graph&) override;
+    bool generateFromGraphStateBF(Graph&, std::vector<vertex>, std::vector<vertex>);
     void draw(QGraphicsView &) override;
 
 public slots:
     void stopCalculation() override { aborted = true; }
 
+signals:
+    void saveState(std::vector<vertex>, std::vector<vertex>);
+
 private:
     bool generateFromGraphBF(Graph&);
+    void checkBFPermutation(std::vector<vertex>&, std::vector<vertex>&, std::map<vertex, std::set<vertex>>);
     bool isRepresentationViable(std::map<vertex, std::set<vertex>> edges);
     std::vector<LNode> representation;
     bool aborted = false;
