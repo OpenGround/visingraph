@@ -19,7 +19,7 @@ void TestLGraphRepresentation::testGenerateI4Representation()
 
     LGraphRepresentation repr;
     QSignalSpy start(&repr, SIGNAL(calculationStarted(int)));
-    QSignalSpy update(&repr, SIGNAL(calculationTick()));
+    QSignalSpy update(&repr, SIGNAL(calculationTick(int)));
     QSignalSpy stop(&repr, SIGNAL(calculationFinished(int)));
 
     QCOMPARE(repr.generateFromGraph(g), true);
@@ -47,7 +47,7 @@ void TestLGraphRepresentation::testGenerateK4Representation()
 
     LGraphRepresentation repr;
     QSignalSpy start(&repr, SIGNAL(calculationStarted(int)));
-    QSignalSpy update(&repr, SIGNAL(calculationTick()));
+    QSignalSpy update(&repr, SIGNAL(calculationTick(int)));
     QSignalSpy stop(&repr, SIGNAL(calculationFinished(int)));
 
     QCOMPARE(repr.generateFromGraph(g), true);
@@ -73,7 +73,7 @@ void TestLGraphRepresentation::testGenerateC4Representation()
 
     LGraphRepresentation repr;
     QSignalSpy start(&repr, SIGNAL(calculationStarted(int)));
-    QSignalSpy update(&repr, SIGNAL(calculationTick()));
+    QSignalSpy update(&repr, SIGNAL(calculationTick(int)));
     QSignalSpy stop(&repr, SIGNAL(calculationFinished(int)));
 
     QCOMPARE(repr.generateFromGraph(g), true);
@@ -94,7 +94,7 @@ void TestLGraphRepresentation::testFailToGenerateI21Representation()
     }
     LGraphRepresentation repr;
     QSignalSpy start(&repr, SIGNAL(calculationStarted(int)));
-    QSignalSpy update(&repr, SIGNAL(calculationTick()));
+    QSignalSpy update(&repr, SIGNAL(calculationTick(int)));
     QSignalSpy stop(&repr, SIGNAL(calculationFinished(int)));
     QSignalSpy tooBig(&repr, SIGNAL(graphTooBig()));
 
