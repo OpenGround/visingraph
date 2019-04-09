@@ -104,15 +104,11 @@ bool LGraphRepresentation::generateFromGraphStateBF(Graph& graph, std::vector<ve
 
         // Update the progress dialog
         counter++;
-        std::cout << counter <<std::endl;
         if(counter == permutationsPerTick)
         {
             emit calculationTick(1);
             counter = 0;
         }
-        std::cout << counter <<std::endl;
-
-
     }
     while(!viable && !aborted && std::next_permutation(vertices_x.begin(), vertices_x.end()));
 
