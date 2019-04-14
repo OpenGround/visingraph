@@ -4,3 +4,8 @@ GraphRepresentation::GraphRepresentation()
 {
 
 }
+
+GraphRepresentationManager::GraphRepresentationManager()
+{
+
+}

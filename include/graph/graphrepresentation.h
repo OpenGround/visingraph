@@ -11,7 +11,17 @@ class GraphRepresentation : public QObject
 public:
     GraphRepresentation();
     virtual ~GraphRepresentation() {}
-    virtual bool generateFromGraph(Graph&) = 0;
+    virtual void draw(QGraphicsView&) = 0;
+
+};
+
+class GraphRepresentationManager : public QObject
+{
+    Q_OBJECT
+public:
+    GraphRepresentationManager();
+    virtual ~GraphRepresentationManager() {}
+    virtual void generateFromGraph(Graph&) = 0;
     virtual void draw(QGraphicsView&) = 0;
 
 signals:
@@ -19,6 +29,7 @@ signals:
     void calculationStarted(int maxTicks);
     void calculationTick(int ticksElapsed);
     void calculationFinished(int maxTicks);
+    void calculationEnded(bool status);
 
 public slots:
     virtual void stopCalculation() = 0;

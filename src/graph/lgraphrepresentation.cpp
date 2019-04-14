@@ -34,23 +34,75 @@ std::size_t rankPermutation(std::vector<vertex> permutation, std::size_t i, std:
     return a * factorial(n-i-1) + rankPermutation(permutation, i+1, n);
 }
 
-LGraphRepresentation::LGraphRepresentation()
+LGraphQThread::LGraphQThread(QObject *parent) : QThread(parent)
 {
 
 }
 
-bool LGraphRepresentation::generateFromGraph(Graph& graph)
+LGraphQThread::~LGraphQThread()
+{
+    mutex.lock();
+    abort = true;
+    condition.wakeOne();
+    mutex.unlock();
+    wait();
+}
+
+
+void LGraphQThread::check(std::vector<vertex>& x_vertices, std::vector<vertex>& y_vertices, std::map<vertex, std::set<vertex>> &inedges, std::size_t newId)
+{
+    mutex.lock();
+    id = newId;
+    vertices_x = x_vertices;
+    vertices_y = y_vertices;
+    edges = inedges;
+    mutex.unlock();
+
+    if (!isRunning())
+        start(LowPriority);
+    else
+        condition.wakeOne();
+}
+
+void LGraphQThread::run()
+{
+    forever
+    {
+        reprMutex.lock();
+        mutex.lock();
+        if(abort)
+        {
+            reprMutex.unlock();
+            mutex.unlock();
+            return;
+        }
+        repr.checkBFPermutation(vertices_x, vertices_y, edges);
+        bool result = repr.isRepresentationViable(edges);
+        reprMutex.unlock();
+        emit finishedCalculation(result, id);
+        condition.wait(&mutex);
+        mutex.unlock();
+    }
+}
+
+
+LGraphRepresentationManager::LGraphRepresentationManager()
+{
+
+}
+
+void LGraphRepresentationManager::generateFromGraph(Graph& graph)
 {
     return generateFromGraphBF(graph);
 }
 
 /*!
- * \brief LGraphRepresentation::generate_from_graph_BF
+ * \brief LGraphRepresentationManager::generate_from_graph_BF
  * Attempt to create the representation by checking all possible
  * (n!)^2 permutations
  * \param graph The graph which is to be represented
  */
-bool LGraphRepresentation::generateFromGraphBF(Graph& graph)
+void LGraphRepresentationManager::generateFromGraphBF(Graph& graph)
 {
     std::vector<vertex> vertices_x = graph.getVertices();
     std::vector<vertex> vertices_y = graph.getVertices();
@@ -58,11 +110,13 @@ bool LGraphRepresentation::generateFromGraphBF(Graph& graph)
     return generateFromGraphStateBF(graph, vertices_x, vertices_y);
 }
 
-bool LGraphRepresentation::generateFromGraphStateBF(Graph& graph, std::vector<vertex> vertices_x, std::vector<vertex> vertices_y)
+void LGraphRepresentationManager::generateFromGraphStateBF(Graph& graph, std::vector<vertex> vertices_x, std::vector<vertex> vertices_y)
 {
-    std::map<vertex, std::set<vertex>> edges = graph.getEdges();
+    edges = graph.getEdges();
 
-    bool viable = false;
+    viable = false;
+    xVertices = vertices_x;
+    yVertices = vertices_y;
 
     std::size_t size = vertices_x.size();
 
@@ -72,14 +126,14 @@ bool LGraphRepresentation::generateFromGraphStateBF(Graph& graph, std::vector<ve
         // 21! > 2^64, although I would estimate that at most 11-12 is feasible
         // to be run in a decent timeframe
         emit graphTooBig();
-        return false;
+        return;
     }
 
-    std::size_t permutations = factorial(size);
-    std::size_t permutationsPerTick = (permutations / INT_MAX) + 1;
-    std::size_t currentPermutation = rankPermutation(vertices_x, 0, size);
-    int ticks = static_cast<int>(permutations / permutationsPerTick);
-    std::size_t counter = 0;
+    permutations = factorial(size);
+    permutationsPerTick = (permutations / INT_MAX) + 1;
+    currentPermutation = rankPermutation(vertices_x, 0, size);
+    ticks = static_cast<int>(permutations / permutationsPerTick);
+    counter = 0;
 
     aborted = false;
 
@@ -88,44 +142,92 @@ bool LGraphRepresentation::generateFromGraphStateBF(Graph& graph, std::vector<ve
     // If the calculation has already been started, tick the required number of ticks
     emit calculationTick(static_cast<int>(currentPermutation/permutationsPerTick));
 
-    do
+    int threadNo = QThread::idealThreadCount();
+    threads.resize(threadNo);
+
+    for(int i = 0; i < threadNo; i++)
     {
-        vertices_y = vertices_x;
-        do
+        threads[i] = std::unique_ptr<LGraphQThread>(new LGraphQThread());
+        threads[i]->check(xVertices, yVertices, edges, i);
+        connect(threads[i].get(), SIGNAL(finishedCalculation(bool, int)), this, SLOT(threadFinished(bool, int)));
+        if (!std::next_permutation(yVertices.begin(), yVertices.end()))
         {
-            // Let other events process so that the program doesn't stop responding
-            QCoreApplication::processEvents();
-
-            checkBFPermutation(vertices_x, vertices_y, edges);
-
-            viable = isRepresentationViable(edges);
-        }
-        while(!viable && !aborted && std::next_permutation(vertices_y.begin(), vertices_y.end()));
-
-        // Update the progress dialog
-        counter++;
-        if(counter == permutationsPerTick)
-        {
-            emit calculationTick(1);
-            counter = 0;
+            if (!std::next_permutation(xVertices.begin(), xVertices.end()))
+            {
+                break;
+            }
         }
     }
-    while(!viable && !aborted && std::next_permutation(vertices_x.begin(), vertices_x.end()));
 
-    if(aborted)
-    {
-        int result = QMessageBox::question(nullptr, "Save the computation state?", "Do you want to save the computation state?", 0, 1);
-        if(result == 1)
-            emit saveState(vertices_x, vertices_y);
-    }
+}
 
-    emit calculationFinished(ticks);
-
-    return viable;
+void LGraphRepresentationManager::draw(QGraphicsView& view)
+{
+    threads[foundSolution]->draw(view);
 }
 
 
-void LGraphRepresentation::checkBFPermutation(std::vector<vertex>& vertices_x, std::vector<vertex>& vertices_y, std::map<vertex, std::set<vertex>> edges)
+void LGraphRepresentationManager::threadFinished(bool status, int id)
+{
+    viable = viable || status;
+    if(!viable && !aborted)
+    {
+        if(!std::next_permutation(yVertices.begin(), yVertices.end()))
+        {
+            if(!std::next_permutation(xVertices.begin(), xVertices.end()))
+            {
+                // TODO: not necessarily correct
+                emit calculationFinished(ticks);
+                emit calculationEnded(false);
+                return;
+            }
+            else
+            {
+                yVertices = xVertices;
+            }
+            // Update the progress dialog
+            counter++;
+            if(counter == permutationsPerTick)
+            {
+                emit calculationTick(1);
+                counter = 0;
+            }
+        }
+
+        threads[id]->check(xVertices, yVertices, edges, id);
+
+    }
+    else if(viable)
+    {
+        if(status)
+            foundSolution = id;
+        stopped++;
+        if(stopped == threads.size())
+        {
+            emit calculationFinished(ticks);
+            emit calculationEnded(true);
+        }
+    }
+    else if(aborted)
+    {
+        stopped++;
+        if(stopped == threads.size())
+        {
+            int result = QMessageBox::question(nullptr, "Save the computation state?", "Do you want to save the computation state?", 0, 1);
+            if(result == 1)
+                emit saveState(xVertices, yVertices);
+        }
+    }
+}
+
+
+LGraphRepresentation::LGraphRepresentation()
+{
+
+}
+
+
+void LGraphRepresentation::checkBFPermutation(std::vector<vertex>& vertices_x, std::vector<vertex>& vertices_y, std::map<vertex, std::set<vertex>>& edges)
 {
     std::map<vertex, std::pair<std::size_t, std::size_t>> coordinates;
     for(std::size_t i = 0; i < vertices_x.size(); ++i)

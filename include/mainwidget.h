@@ -4,7 +4,9 @@
 #include <QWidget>
 #include <QGraphicsScene>
 #include <QProgressDialog>
+#include <memory>
 #include "include/graph.h"
+#include "include/graph/graphrepresentation.h"
 /*!
     \class MainWidget
     \brief The MainWidget class represents the main widget for the application.
@@ -36,6 +38,7 @@ public:
 signals:
     void abortedCalculation();
 
+
 public slots:
     void addNode(vertex);
     void deleteNode(vertex);
@@ -45,6 +48,7 @@ public slots:
     void startCalc(int);
     void tick(int);
     void stopCalc(int);
+    void calculationEnded(bool);
     void abortCalc() {emit abortedCalculation();}
     void saveLGraphCalculationState(std::vector<vertex>, std::vector<vertex>);
     void loadCalculationState();
@@ -55,6 +59,7 @@ private:
     Ui::MainWidget *ui;
     Graph currentGraph;
     QProgressDialog *progress;
+    std::unique_ptr<GraphRepresentationManager> representation;
 };
 
 #endif // MAINWIDGET_H

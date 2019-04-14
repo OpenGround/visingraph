@@ -39,25 +39,32 @@ void MainWidget::convert()
 {
     Representation repr = static_cast<Representation>(ui->graphRepresentationComboBox->currentData().toInt());
 
-    switch (repr) {
-    case Representation::L_GRAPH:
-    LGraphRepresentation representation;
-    connect(&representation, SIGNAL(calculationStarted(int)), this, SLOT(startCalc(int)));
-    connect(&representation, SIGNAL(calculationTick(int)), this, SLOT(tick(int)));
-    connect(&representation, SIGNAL(calculationFinished(int)), this, SLOT(stopCalc(int)));
-    connect(&representation, SIGNAL(saveState(std::vector<vertex>, std::vector<vertex>)), this, SLOT(saveLGraphCalculationState(std::vector<vertex>, std::vector<vertex>)));
-    connect(this, SIGNAL(abortedCalculation()), &representation, SLOT(stopCalculation()));
-    if (representation.generateFromGraph(currentGraph))
+    switch (repr)
     {
-        representation.draw(*(ui->outputGraphicsView));
+        case Representation::L_GRAPH:
+        representation = std::unique_ptr<LGraphRepresentationManager>(new LGraphRepresentationManager());
+        connect(representation.get(), SIGNAL(calculationStarted(int)), this, SLOT(startCalc(int)));
+        connect(representation.get(), SIGNAL(calculationTick(int)), this, SLOT(tick(int)));
+        connect(representation.get(), SIGNAL(calculationFinished(int)), this, SLOT(stopCalc(int)));
+        connect(representation.get(), SIGNAL(calculationEnded(bool)), this, SLOT(calculationEnded(bool)));
+        connect(representation.get(), SIGNAL(saveState(std::vector<vertex>, std::vector<vertex>)), this, SLOT(saveLGraphCalculationState(std::vector<vertex>, std::vector<vertex>)));
+        connect(this, SIGNAL(abortedCalculation()), representation.get(), SLOT(stopCalculation()));
+        representation->generateFromGraph(currentGraph);
+        break;
+    };
+}
+
+void MainWidget::calculationEnded(bool status)
+{
+    if (status)
+    {
+        representation->draw(*(ui->outputGraphicsView));
     }
     else
     {
         QMessageBox::warning(this, tr("No representation exists"), tr("No representation was found for this graph"));
     }
 
-    break;
-    };
 }
 
 
@@ -113,7 +120,6 @@ void MainWidget::stopCalc(int maxTicks)
 
 void MainWidget::saveLGraphCalculationState(std::vector<vertex> x_vertices, std::vector<vertex> y_vertices)
 {
-    std::cout << "hi";
     QFile out(QFileDialog::getSaveFileName(nullptr, "Enter the filename"));
     if(!out.open(QIODevice::WriteOnly | QIODevice::Text))
         return;
@@ -129,7 +135,14 @@ void MainWidget::saveLGraphCalculationState(std::vector<vertex> x_vertices, std:
 
     auto edges = currentGraph.getEdges();
 
-    os << edges.size() << "\n";
+    std::size_t size = 0;
+    for(auto neig : edges)
+    {
+        size += neig.second.size();
+    }
+    size /= 2;
+
+    os << size << "\n";
     for(auto neighbours: edges)
     {
         for(auto neighbour: neighbours.second)
@@ -157,13 +170,13 @@ void MainWidget::loadCalculationState()
     std::vector<vertex> x_vertices, y_vertices;
     line = in.readLine().split('\n')[0];
     QStringList x = line.split(" ");
-    for(std::size_t i = 0; i < x.size(); ++i)
+    for(std::size_t i = 0; i < x.size()-1; ++i)
     {
         x_vertices.push_back(x[i].toInt());
     }
     line = in.readLine().split('\n')[0];
     QStringList y = line.split(" ");
-    for(std::size_t i = 0; i < y.size(); ++i)
+    for(std::size_t i = 0; i < y.size()-1; ++i)
     {
         y_vertices.push_back(y[i].toInt());
     }
@@ -190,20 +203,14 @@ void MainWidget::calculateFrom(Representation repr, std::vector<vertex> x_vertic
 
     currentGraph = g;
 
-    LGraphRepresentation representation;
-    connect(&representation, SIGNAL(calculationStarted(int)), this, SLOT(startCalc(int)));
-    connect(&representation, SIGNAL(calculationTick(int)), this, SLOT(tick(int)));
-    connect(&representation, SIGNAL(calculationFinished(int)), this, SLOT(stopCalc(int)));
-    connect(&representation, SIGNAL(saveState(std::vector<vertex>, std::vector<vertex>)), this, SLOT(saveLGraphCalculationState(std::vector<vertex>, std::vector<vertex>)));
-    connect(this, SIGNAL(abortedCalculation()), &representation, SLOT(stopCalculation()));
-    if (representation.generateFromGraphStateBF(currentGraph, x_vertices, y_vertices))
-    {
-        representation.draw(*(ui->outputGraphicsView));
-    }
-    else
-    {
-        QMessageBox::warning(this, tr("No representation exists"), tr("No representation was found for this graph"));
-    }
+    representation = std::unique_ptr<LGraphRepresentationManager>(new LGraphRepresentationManager());
+    connect(representation.get(), SIGNAL(calculationStarted(int)), this, SLOT(startCalc(int)));
+    connect(representation.get(), SIGNAL(calculationTick(int)), this, SLOT(tick(int)));
+    connect(representation.get(), SIGNAL(calculationFinished(int)), this, SLOT(stopCalc(int)));
+    connect(representation.get(), SIGNAL(saveState(std::vector<vertex>, std::vector<vertex>)), this, SLOT(saveLGraphCalculationState(std::vector<vertex>, std::vector<vertex>)));
+    connect(this, SIGNAL(abortedCalculation()), representation.get(), SLOT(stopCalculation()));
+    // TODO: this isn't an ideal solution and should be fixed later
+    ((LGraphRepresentationManager*)representation.get())->generateFromGraphStateBF(currentGraph, x_vertices, y_vertices);
 }
 
 MainWidget::~MainWidget()
