@@ -115,6 +115,8 @@ void LGraphRepresentationManager::generateFromGraphStateBF(Graph& graph, std::ve
     edges = graph.getEdges();
 
     viable = false;
+    aborted = false;
+    stopped = 0;
     xVertices = vertices_x;
     yVertices = vertices_y;
 
@@ -135,8 +137,6 @@ void LGraphRepresentationManager::generateFromGraphStateBF(Graph& graph, std::ve
     ticks = static_cast<int>(permutations / permutationsPerTick);
     counter = 0;
 
-    aborted = false;
-
     emit calculationStarted(ticks);
 
     // If the calculation has already been started, tick the required number of ticks
@@ -150,12 +150,13 @@ void LGraphRepresentationManager::generateFromGraphStateBF(Graph& graph, std::ve
         threads[i] = std::unique_ptr<LGraphQThread>(new LGraphQThread());
         threads[i]->check(xVertices, yVertices, edges, i);
         connect(threads[i].get(), SIGNAL(finishedCalculation(bool, int)), this, SLOT(threadFinished(bool, int)));
-        if (!std::next_permutation(yVertices.begin(), yVertices.end()))
+        if (!std::next_permutation(yVertices.begin()+1, yVertices.end()-1))
         {
             if (!std::next_permutation(xVertices.begin(), xVertices.end()))
             {
                 break;
             }
+
         }
     }
 
@@ -172,7 +173,8 @@ void LGraphRepresentationManager::threadFinished(bool status, int id)
     viable = viable || status;
     if(!viable && !aborted)
     {
-        if(!std::next_permutation(yVertices.begin(), yVertices.end()))
+        // WLOG we may assume that the first node is the highest and the last is the lowest
+        if(!std::next_permutation(yVertices.begin()+1, yVertices.end()-1))
         {
             if(!std::next_permutation(xVertices.begin(), xVertices.end()))
             {
@@ -193,7 +195,6 @@ void LGraphRepresentationManager::threadFinished(bool status, int id)
                 counter = 0;
             }
         }
-
         threads[id]->check(xVertices, yVertices, edges, id);
 
     }
@@ -226,7 +227,6 @@ LGraphRepresentation::LGraphRepresentation()
 
 }
 
-
 void LGraphRepresentation::checkBFPermutation(std::vector<vertex>& vertices_x, std::vector<vertex>& vertices_y, std::map<vertex, std::set<vertex>>& edges)
 {
     std::map<vertex, std::pair<std::size_t, std::size_t>> coordinates;
@@ -247,7 +247,7 @@ void LGraphRepresentation::checkBFPermutation(std::vector<vertex>& vertices_x, s
         LNode n;
         n.v = it->first;
         n.x = it->second.first;
-        n.y = it->second.second;
+        n.y = vertices_x.size() - it->second.second - 1;
         representation.push_back(n);
     }
 
@@ -258,6 +258,12 @@ void LGraphRepresentation::checkBFPermutation(std::vector<vertex>& vertices_x, s
     std::sort(representation.begin(), representation.end(), [](LNode a, LNode b){return a.x < b.x;});
     for(auto it=representation.begin(); it!=representation.end(); ++it)
     {
+        if(it == representation.begin())
+        {
+            it->width = representation.size()-1;
+            continue;
+        }
+
         std::size_t width = 0;
         // If the vertex has no edges, there is no need to extend
         if(edges.at(it->v).size() > 0)
