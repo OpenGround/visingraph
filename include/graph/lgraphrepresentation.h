@@ -75,6 +75,7 @@ public:
     LGraphRepresentation();
     ~LGraphRepresentation() override {}
     void checkBFPermutation(std::vector<vertex>&, std::vector<vertex>&, std::map<vertex, std::set<vertex>>&);
+    bool checkBFPermutations(std::vector<vertex>&, std::vector<vertex>&, std::map<vertex, std::set<vertex>>&);
     bool isRepresentationViable(std::map<vertex, std::set<vertex>> edges);
     void draw(QGraphicsView &) override;
 
