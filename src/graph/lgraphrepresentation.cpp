@@ -294,7 +294,7 @@ void LGraphRepresentation::checkBFPermutation(std::vector<vertex>& vertices_x, s
             {
                 // If the next node's L would intersect and they don't have a common
                 // edge, don't continue with the extension
-                if(it2->y < it->y && it2->x < it->x && (it2->x + it2->width) >= it->x && edges.at(it->v).count(it2->v) == 0)
+                if(it2->y > it->y && it2->x < it->x && (it2->x + it2->width) >= it->x && edges.at(it->v).count(it2->v) == 0)
                 {
                     break;
                 }
