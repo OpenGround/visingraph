@@ -2,6 +2,7 @@
 #define LGRAPHREPRESENTATION_H
 
 #include "include/graph/graphrepresentation.h"
+#include <memory>
 #include <QThread>
 #include <QMutex>
 #include <QWaitCondition>
