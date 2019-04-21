@@ -55,6 +55,7 @@ void LGraphQThread::check(std::vector<vertex>& x_vertices, std::vector<vertex>& 
     id = newId;
     vertices_x = x_vertices;
     vertices_y = y_vertices;
+    std::sort(std::next(vertices_y.begin(), 1), std::prev(vertices_y.end(), 1));
     edges = inedges;
     mutex.unlock();
 
@@ -76,8 +77,7 @@ void LGraphQThread::run()
             mutex.unlock();
             return;
         }
-        repr.checkBFPermutation(vertices_x, vertices_y, edges);
-        bool result = repr.isRepresentationViable(edges);
+        bool result = repr.checkBFPermutations(vertices_x, vertices_y, edges);
         reprMutex.unlock();
         emit finishedCalculation(result, id);
         condition.wait(&mutex);
@@ -144,22 +144,16 @@ void LGraphRepresentationManager::generateFromGraphStateBF(Graph& graph, std::ve
 
     int threadNo = QThread::idealThreadCount();
     threads.resize(threadNo);
-
     for(int i = 0; i < threadNo; i++)
     {
         threads[i] = std::unique_ptr<LGraphQThread>(new LGraphQThread());
-        threads[i]->check(xVertices, yVertices, edges, i);
+        threads[i]->check(xVertices, xVertices, edges, i);
         connect(threads[i].get(), SIGNAL(finishedCalculation(bool, int)), this, SLOT(threadFinished(bool, int)));
-        if (!std::next_permutation(yVertices.begin()+1, yVertices.end()-1))
+        if (!std::next_permutation(xVertices.begin(), xVertices.end()))
         {
-            if (!std::next_permutation(xVertices.begin(), xVertices.end()))
-            {
-                break;
-            }
-
+            break;
         }
     }
-
 }
 
 void LGraphRepresentationManager::draw(QGraphicsView& view)
@@ -167,35 +161,26 @@ void LGraphRepresentationManager::draw(QGraphicsView& view)
     threads[foundSolution]->draw(view);
 }
 
-
 void LGraphRepresentationManager::threadFinished(bool status, int id)
 {
     viable = viable || status;
     if(!viable && !aborted)
     {
-        // WLOG we may assume that the first node is the highest and the last is the lowest
-        if(!std::next_permutation(yVertices.begin()+1, yVertices.end()-1))
+        if(!std::next_permutation(xVertices.begin(), xVertices.end()))
         {
-            if(!std::next_permutation(xVertices.begin(), xVertices.end()))
-            {
-                // TODO: not necessarily correct
-                emit calculationFinished(ticks);
-                emit calculationEnded(false);
-                return;
-            }
-            else
-            {
-                yVertices = xVertices;
-            }
-            // Update the progress dialog
-            counter++;
-            if(counter == permutationsPerTick)
-            {
-                emit calculationTick(1);
-                counter = 0;
-            }
+            // TODO: not necessarily correct
+            emit calculationFinished(ticks);
+            emit calculationEnded(false);
+            return;
         }
-        threads[id]->check(xVertices, yVertices, edges, id);
+        // Update the progress dialog
+        counter++;
+        if(counter == permutationsPerTick)
+        {
+            emit calculationTick(1);
+            counter = 0;
+        }
+        threads[id]->check(xVertices, xVertices, edges, id);
 
     }
     else if(viable)
@@ -227,6 +212,18 @@ LGraphRepresentation::LGraphRepresentation()
 
 }
 
+bool LGraphRepresentation::checkBFPermutations(std::vector<vertex>& vertices_x, std::vector<vertex>& vertices_y, std::map<vertex, std::set<vertex>>& edges)
+{
+    do
+    {
+        checkBFPermutation(vertices_x, vertices_y, edges);
+        if(isRepresentationViable(edges))
+            return true;
+    }
+    while(std::next_permutation(vertices_y.begin()+1, vertices_y.end()));
+    return false;
+}
+
 void LGraphRepresentation::checkBFPermutation(std::vector<vertex>& vertices_x, std::vector<vertex>& vertices_y, std::map<vertex, std::set<vertex>>& edges)
 {
     std::map<vertex, std::pair<std::size_t, std::size_t>> coordinates;
@@ -236,9 +233,8 @@ void LGraphRepresentation::checkBFPermutation(std::vector<vertex>& vertices_x, s
     }
     for(std::size_t i = 0; i < vertices_x.size(); ++i)
     {
-        coordinates.at(vertices_y[i]).second = i;
+        coordinates.at(vertices_y[i]).second = vertices_x.size() - i - 1;
     }
-
     representation.clear();
 
     // Create the representation without any height or length at first
@@ -247,7 +243,7 @@ void LGraphRepresentation::checkBFPermutation(std::vector<vertex>& vertices_x, s
         LNode n;
         n.v = it->first;
         n.x = it->second.first;
-        n.y = vertices_x.size() - it->second.second - 1;
+        n.y = it->second.second;
         representation.push_back(n);
     }
 
