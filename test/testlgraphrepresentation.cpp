@@ -17,17 +17,20 @@ void TestLGraphRepresentation::testGenerateI4Representation()
         g.addVertex();
     }
 
-    LGraphRepresentation repr;
+    LGraphRepresentationManager repr;
     QSignalSpy start(&repr, SIGNAL(calculationStarted(int)));
     QSignalSpy update(&repr, SIGNAL(calculationTick(int)));
     QSignalSpy stop(&repr, SIGNAL(calculationFinished(int)));
+    QSignalSpy result(&repr, SIGNAL(calculationEnded(bool)));
 
-    QCOMPARE(repr.generateFromGraph(g), true);
+    repr.generateFromGraph(g);
+    QVERIFY(result.wait());
 
     QCOMPARE(start.count(), 1);
     QCOMPARE(stop.count(), 1);
     QVERIFY(update.count() < INT_MAX);
-
+    QCOMPARE(result.count(), 1);
+    QVERIFY(result.takeFirst().at(0).toBool() == true);
 }
 
 void TestLGraphRepresentation::testGenerateK4Representation()
@@ -45,17 +48,18 @@ void TestLGraphRepresentation::testGenerateK4Representation()
         }
     }
 
-    LGraphRepresentation repr;
+    LGraphRepresentationManager repr;
     QSignalSpy start(&repr, SIGNAL(calculationStarted(int)));
     QSignalSpy update(&repr, SIGNAL(calculationTick(int)));
     QSignalSpy stop(&repr, SIGNAL(calculationFinished(int)));
+    QSignalSpy result(&repr, SIGNAL(calculationEnded(bool)));
 
-    QCOMPARE(repr.generateFromGraph(g), true);
+    repr.generateFromGraph(g);
+    QVERIFY(result.wait());
 
     QCOMPARE(start.count(), 1);
     QCOMPARE(stop.count(), 1);
     QVERIFY(update.count() < INT_MAX);
-
 }
 
 void TestLGraphRepresentation::testGenerateC4Representation()
@@ -71,18 +75,21 @@ void TestLGraphRepresentation::testGenerateC4Representation()
     }
     g.addEdge(3, 0);
 
-    LGraphRepresentation repr;
+    LGraphRepresentationManager repr;
     QSignalSpy start(&repr, SIGNAL(calculationStarted(int)));
     QSignalSpy update(&repr, SIGNAL(calculationTick(int)));
     QSignalSpy stop(&repr, SIGNAL(calculationFinished(int)));
 
-    QCOMPARE(repr.generateFromGraph(g), true);
+    QSignalSpy result(&repr, SIGNAL(calculationEnded(bool)));
+
+    repr.generateFromGraph(g);
+    QVERIFY(result.wait());
 
     QCOMPARE(start.count(), 1);
     QCOMPARE(stop.count(), 1);
     QVERIFY(update.count() < INT_MAX);
-
-
+    QCOMPARE(result.count(), 1);
+    QVERIFY(result.takeFirst().at(0).toBool() == true);
 }
 
 void TestLGraphRepresentation::testFailToGenerateI21Representation()
@@ -92,18 +99,22 @@ void TestLGraphRepresentation::testFailToGenerateI21Representation()
     {
         g.addVertex();
     }
-    LGraphRepresentation repr;
+    LGraphRepresentationManager repr;
     QSignalSpy start(&repr, SIGNAL(calculationStarted(int)));
     QSignalSpy update(&repr, SIGNAL(calculationTick(int)));
     QSignalSpy stop(&repr, SIGNAL(calculationFinished(int)));
     QSignalSpy tooBig(&repr, SIGNAL(graphTooBig()));
 
-    QCOMPARE(repr.generateFromGraph(g), false);
+    QSignalSpy result(&repr, SIGNAL(calculationEnded(bool)));
+
+    repr.generateFromGraph(g);
+    QVERIFY(tooBig.wait());
 
     QCOMPARE(tooBig.count(), 1);
     QCOMPARE(start.count(), 0);
     QCOMPARE(stop.count(), 0);
     QCOMPARE(update.count(), 0);
-
+    QCOMPARE(result.count(), 1);
+    QVERIFY(result.takeFirst().at(0).toBool() == false);
 
 }

@@ -6,8 +6,9 @@
 
 #include <algorithm> // std::max
 
-int main()
+int main(int argc, char** argv)
 {
+    QCoreApplication app(argc, argv);
     int retval = 0;
 
     TestGraph testgraph;
