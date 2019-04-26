@@ -108,13 +108,10 @@ void TestLGraphRepresentation::testFailToGenerateI21Representation()
     QSignalSpy result(&repr, SIGNAL(calculationEnded(bool)));
 
     repr.generateFromGraph(g);
-    QVERIFY(tooBig.wait());
 
     QCOMPARE(tooBig.count(), 1);
     QCOMPARE(start.count(), 0);
     QCOMPARE(stop.count(), 0);
     QCOMPARE(update.count(), 0);
-    QCOMPARE(result.count(), 1);
-    QVERIFY(result.takeFirst().at(0).toBool() == false);
-
+    QCOMPARE(result.count(), 0);
 }
