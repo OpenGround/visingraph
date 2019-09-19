@@ -1,4 +1,5 @@
 #include "include/graph/lgraphrepresentation.h"
+#include "include/poset.h"
 
 #include <QCoreApplication>
 #include <QGraphicsSimpleTextItem>
@@ -204,6 +205,100 @@ void LGraphRepresentationManager::threadFinished(bool status, int id)
                 emit saveState(xVertices, yVertices);
         }
     }
+}
+
+LGraphExtRepresentationManager::LGraphExtRepresentationManager()
+{
+
+}
+
+void LGraphExtRepresentationManager::generateFromGraph(Graph& g)
+{
+    std::vector<vertex> vertices_x = g.getVertices();
+    aborted = false;
+    std::size_t size, permutations, permutationsPerTick, counter;
+    int ticks;
+
+    size = vertices_x.size();
+    // Large graphs aren't permitted yet
+    if(size > 12)
+    {
+        // At most 11-12 is currently feasible due to memory constraints
+        emit graphTooBig();
+        return;
+    }
+
+    permutations = factorial(size);
+    permutationsPerTick = (permutations / INT_MAX) + 1;
+    ticks = static_cast<int>(permutations / permutationsPerTick);
+    counter = 0;
+    emit calculationStarted(ticks);
+
+    do {
+        QCoreApplication::processEvents();
+        if(checkPoset(vertices_x, g))
+        {
+            emit calculationFinished(ticks);
+            emit calculationEnded(true);
+            return;
+        }
+        counter++;
+        if(counter == permutationsPerTick)
+        {
+            emit calculationTick(1);
+            counter = 0;
+        }
+    } while(std::next_permutation(vertices_x.begin(), vertices_x.end()) && !aborted);
+    emit calculationFinished(ticks);
+    emit calculationEnded(false);
+}
+
+void LGraphExtRepresentationManager::draw(QGraphicsView &view)
+{
+    repr.draw(view);
+}
+
+bool LGraphExtRepresentationManager::checkPoset(std::vector<vertex>& vertices_x, Graph &g)
+{
+    Poset p(vertices_x.size());
+    auto edges = g.getEdges();
+    for(std::size_t i = 0; i<vertices_x.size(); ++i)
+    {
+        for(std::size_t j=i+1; j<vertices_x.size(); ++j)
+        {
+            if(edges.at(vertices_x[i]).count(vertices_x[j])>0)
+            {
+                p.addInequality(i, j);
+            }
+        }
+    }
+    std::queue<std::vector<std::size_t>> q;
+
+    p.findAllLinearExtensions(vertices_x, q);
+
+    bool found = false;
+    std::vector<vertex> vertices_y;
+    while(!(q.empty() || found))
+    {
+        vertices_y.clear();
+        vertices_y.resize(vertices_x.size());
+        auto v = q.front();
+        for(std::size_t i = 0; i<v.size(); ++i)
+        {
+            vertices_y[i] = vertices_x[v[i]];
+        }
+        repr.checkBFPermutation(vertices_x, vertices_y, edges);
+
+        if(repr.isRepresentationViable(edges))
+        {
+            found = true;
+            result_x = vertices_x;
+            result_y = vertices_y;
+        }
+        q.pop();
+    }
+
+    return found;
 }
 
 

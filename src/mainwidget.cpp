@@ -23,6 +23,8 @@ MainWidget::MainWidget(QWidget *parent) : QWidget(parent), ui(new Ui::MainWidget
 void MainWidget::initChoices()
 {
     ui->graphRepresentationComboBox->addItem(tr("L-Graph"), static_cast<int>(Representation::L_GRAPH));
+    ui->graphRepresentationComboBox->addItem(tr("L-Graph via extensions"), static_cast<int>(Representation::L_GRAPH_EXT));
+
 }
 
 void MainWidget::initConnections()
@@ -41,17 +43,21 @@ void MainWidget::convert()
 
     switch (repr)
     {
-        case Representation::L_GRAPH:
+    case Representation::L_GRAPH:
         representation = std::unique_ptr<LGraphRepresentationManager>(new LGraphRepresentationManager());
-        connect(representation.get(), SIGNAL(calculationStarted(int)), this, SLOT(startCalc(int)));
-        connect(representation.get(), SIGNAL(calculationTick(int)), this, SLOT(tick(int)));
-        connect(representation.get(), SIGNAL(calculationFinished(int)), this, SLOT(stopCalc(int)));
-        connect(representation.get(), SIGNAL(calculationEnded(bool)), this, SLOT(calculationEnded(bool)));
         connect(representation.get(), SIGNAL(saveState(std::vector<vertex>, std::vector<vertex>)), this, SLOT(saveLGraphCalculationState(std::vector<vertex>, std::vector<vertex>)));
-        connect(this, SIGNAL(abortedCalculation()), representation.get(), SLOT(stopCalculation()));
-        representation->generateFromGraph(currentGraph);
+        break;
+    case Representation::L_GRAPH_EXT:
+        representation = std::unique_ptr<LGraphExtRepresentationManager>(new LGraphExtRepresentationManager());
         break;
     };
+    connect(representation.get(), SIGNAL(calculationStarted(int)), this, SLOT(startCalc(int)));
+    connect(representation.get(), SIGNAL(calculationTick(int)), this, SLOT(tick(int)));
+    connect(representation.get(), SIGNAL(calculationFinished(int)), this, SLOT(stopCalc(int)));
+    connect(representation.get(), SIGNAL(calculationEnded(bool)), this, SLOT(calculationEnded(bool)));
+    connect(this, SIGNAL(abortedCalculation()), representation.get(), SLOT(stopCalculation()));
+    representation->generateFromGraph(currentGraph);
+
 }
 
 void MainWidget::calculationEnded(bool status)

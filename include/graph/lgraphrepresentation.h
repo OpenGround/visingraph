@@ -2,6 +2,7 @@
 #define LGRAPHREPRESENTATION_H
 
 #include "include/graph/graphrepresentation.h"
+#include "include/poset.h"
 #include <memory>
 #include <QThread>
 #include <QMutex>
@@ -67,7 +68,6 @@ private:
 
 };
 
-
 class LGraphRepresentation: public GraphRepresentation
 {
     Q_OBJECT
@@ -78,7 +78,6 @@ public:
     bool checkBFPermutations(std::vector<vertex>&, std::vector<vertex>&, std::map<vertex, std::set<vertex>>&);
     bool isRepresentationViable(std::map<vertex, std::set<vertex>> edges);
     void draw(QGraphicsView &) override;
-
 private:
     std::vector<LNode> representation;
 
@@ -110,6 +109,31 @@ private:
     int id;
     bool abort=false;
 };
+
+class LGraphExtRepresentationManager : public GraphRepresentationManager
+{
+    Q_OBJECT
+public:
+    LGraphExtRepresentationManager();
+    ~LGraphExtRepresentationManager() override {}
+    void generateFromGraph(Graph&) override;
+    void draw(QGraphicsView &view) override;
+
+public slots:
+    void stopCalculation() override { aborted = true; }
+
+signals:
+    void stopGeneration();
+
+private:
+    Poset poset;
+    LGraphRepresentation repr;
+    bool aborted = false;
+    bool checkPoset(std::vector<vertex>& vertices_x, Graph& g);
+    std::vector<vertex> result_x, result_y;
+
+};
+
 
 
 #endif // LGRAPHREPRESENTATION_H

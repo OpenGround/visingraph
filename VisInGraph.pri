@@ -11,7 +11,8 @@ SOURCES += \
     src/ui/inputgraphicsview.cpp \
     src/ui/outputgraphicsview.cpp \
     src/graph/graphrepresentation.cpp \
-    src/graph/lgraphrepresentation.cpp
+    src/graph/lgraphrepresentation.cpp \
+    src/poset.cpp
 
 HEADERS += \
     include/graph.h \
@@ -20,7 +21,8 @@ HEADERS += \
     include/ui/inputgraphicsview.h \
     include/ui/outputgraphicsview.h \
     include/graph/graphrepresentation.h \
-    include/graph/lgraphrepresentation.h
+    include/graph/lgraphrepresentation.h \
+    include/poset.h
 
 FORMS += \
     ui/mainwindow.ui \

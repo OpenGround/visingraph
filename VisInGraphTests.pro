@@ -5,7 +5,8 @@ QT += testlib
 SOURCES += test/main.cpp \
     test/testgraph.cpp \
     test/testlgraphrepresentation.cpp \
-    test/testutils.cpp
+    test/testutils.cpp \
+    test/testposet.cpp
 
 SOURCES -= src/main.cpp
 
@@ -18,4 +19,5 @@ QMAKE_CXXFLAGS_RELEASE -= -O2
 HEADERS += \
     test/testgraph.h \
     test/testlgraphrepresentation.h \
-    test/testutils.h
+    test/testutils.h \
+    test/include/testposet.h
