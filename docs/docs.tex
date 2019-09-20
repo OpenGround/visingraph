@@ -1,0 +1,77 @@
+\documentclass{article}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amsthm}
+\usepackage{amssymb}
+\usepackage{mathtools}
+\usepackage[utf8]{inputenc}
+\usepackage[czech]{babel}
+\usepackage[total={17cm,25cm}, top=3cm, left=2cm, includefoot]{geometry}
+
+
+
+\begin{document}
+\pagenumbering{gobble}
+\title{VisInGraph}
+\author{Petr Chmel}
+\date{}
+
+\maketitle
+\section{Introduction}
+VisInGraph is a C++ program for visualising intersection graphs.
+Currently, it is able to visualise so-called $\{\llcorner\}$-graphs using two different methods.
+
+\section{Usage}
+The program is distributed in a ZIP file for Windows OS.
+It is sufficient to extract the ZIP file contents to a folder of user's choosing and then run the main program (VisInGraph.exe).
+
+There are white areas: the left one is used for inputting the graph and the right one displays the intersection graph representation, if it exists.
+Under these areas, there is a select box, which shows all possible graph representations, and the ``convert'' button, which start the conversion process.
+
+Should the calculation take a longer amount of time, a progress bar is displayed to show progress.
+
+\section{The program architecture}
+The program has two main parts: the GUI and the graph generation.
+There are also auxiliary classes, which are simple implementations of standard mathematical structures (namely an undirected graph and a poset).
+
+The program also uses Qt library for its GUI.
+
+\subsection{GUI}
+The Graphical User Interface is defined in classes \texttt{MainWindow} and \texttt{MainWidget}.
+The former class encapsulates the latter, which is responsible for user interaction.
+
+
+\subsection{Graph generation}
+The graph generation part defines two abstract classes \texttt{GraphRepresentation} and \texttt{GraphRepresentationManager}.
+
+A class, which inherits from \texttt{GraphRepresentation} should correspond to a type of intersection graph.
+The only requirement is, that if the representation exists, it must be able to be drawn (i.e. it must implement the method \texttt{draw(QGraphicsView\&)}.
+Currently, VisInGraph only has one child class: \texttt{LGraphRepresentation}.
+
+The main calculation part will generally take place in the class inheriting from \texttt{GraphRepresentationManager}.
+Such class has to implement methods \texttt{generateFromGraph(Graph\&)}, \texttt{draw(QGraphicsView\&)} and the slot \texttt{stopCalculation()}.
+The slot is used to abort calculations, so after the slot receives a signal, it should stop the calculation in a reasonable amount of time.
+Currently, VisInGraph has two child classes: \texttt{LGraphRepresentationManager} and \texttt{LGraphExtRepresentationManager}.
+
+
+\subsection{Auxiliary classes}
+There are two main auxiliary classes: \texttt{Graph} and \texttt{Poset}.
+The former implements a graph with the possibility of adding or removing a vertex or an edge with methods \texttt{addVertex()}, \texttt{removeVertex(v)}, \texttt{addEdge(u,v)}, \texttt{removeEdge(u,v)}.
+The latter simply implements a poset - the basic methods are \texttt{addInequality(a,b)}, which adds the inequality $a\leq b$, \texttt{lte(a,b)}, which returns true if and only if $a\leq b$, and \texttt{comparable(a,b)}, which return true if and only if $a\leq b\lor a\geq b$.
+
+
+\subsection{$\{\llcorner\}$-graph algorithms}
+First algorithm builds the $\{\llcorner\}$-graph by trying all possible permutations of vertices on the x-axis and y-axis and for each pair of permutations, tries to construct the $\{\llcorner\}$-graph.
+
+The second algorithm doesn't check all possible pairs of permutations, but for each x-axis permutation, it constructs a poset, from which all of its linear extensions are generated.
+These linear extension are then used as the second part of the pair.
+
+
+\section{Extending the program for other graph classes}
+For any other graph class, it is necessary to create a new child class of \texttt{GraphRepresentation} and \texttt{GraphRepresentationManager}.
+Then, the implemented generation should be added to the GUI.
+First, add another value to the enum class \texttt{Representation} (found in \texttt{mainwidget.h}) and then add the choice to \texttt{MainWidget::initChoices()} and \texttt{MainWidget::convert()}, following suit of the previous classes.
+
+
+\end{document}
