@@ -235,13 +235,16 @@ void LGraphExtRepresentationManager::generateFromGraph(Graph& g)
     emit calculationStarted(ticks);
 
     do {
+        // Process events so that the application doesn't stop responding
         QCoreApplication::processEvents();
+
         if(checkPoset(vertices_x, g))
         {
             emit calculationFinished(ticks);
             emit calculationEnded(true);
             return;
         }
+
         counter++;
         if(counter == permutationsPerTick)
         {
@@ -249,6 +252,7 @@ void LGraphExtRepresentationManager::generateFromGraph(Graph& g)
             counter = 0;
         }
     } while(std::next_permutation(vertices_x.begin(), vertices_x.end()) && !aborted);
+
     emit calculationFinished(ticks);
     emit calculationEnded(false);
 }
@@ -266,7 +270,9 @@ bool LGraphExtRepresentationManager::checkPoset(std::vector<vertex>& vertices_x,
     {
         for(std::size_t j=i+1; j<vertices_x.size(); ++j)
         {
-            if(edges.at(vertices_x[i]).count(vertices_x[j])>0)
+            // If there is an edge, or the left vertex is the first one
+            // (the first vertex on the x axis can be WLOG the first one in the y axis)
+            if(edges.at(vertices_x[i]).count(vertices_x[j])>0 || i == 0)
             {
                 p.addInequality(i, j);
             }
@@ -278,6 +284,7 @@ bool LGraphExtRepresentationManager::checkPoset(std::vector<vertex>& vertices_x,
 
     bool found = false;
     std::vector<vertex> vertices_y;
+    // Try all found linear extensions
     while(!(q.empty() || found))
     {
         vertices_y.clear();
