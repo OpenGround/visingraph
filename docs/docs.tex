@@ -1,12 +1,6 @@
 \documentclass{article}
-\usepackage{graphicx}
-\usepackage{amsmath}
-\usepackage{amsfonts}
-\usepackage{amsthm}
 \usepackage{amssymb}
-\usepackage{mathtools}
 \usepackage[utf8]{inputenc}
-\usepackage[czech]{babel}
 \usepackage[total={17cm,25cm}, top=3cm, left=2cm, includefoot]{geometry}
 
 
@@ -64,7 +58,7 @@ The latter simply implements a poset - the basic methods are \texttt{addInequali
 \subsection{$\{\llcorner\}$-graph algorithms}
 First algorithm builds the $\{\llcorner\}$-graph by trying all possible permutations of vertices on the x-axis and y-axis and for each pair of permutations, tries to construct the $\{\llcorner\}$-graph.
 
-The second algorithm doesn't check all possible pairs of permutations, but for each x-axis permutation, it constructs a poset, from which all of its linear extensions are generated.
+The second algorithm doesn't check all possible pairs of permutations, but for each x-axis permutation, it constructs a poset, from which all of its linear extensions are generated using an algorithm by Ono and Nakano \cite{posetAlgo}.
 These linear extension are then used as the second part of the pair.
 
 
@@ -72,6 +66,9 @@ These linear extension are then used as the second part of the pair.
 For any other graph class, it is necessary to create a new child class of \texttt{GraphRepresentation} and \texttt{GraphRepresentationManager}.
 Then, the implemented generation should be added to the GUI.
 First, add another value to the enum class \texttt{Representation} (found in \texttt{mainwidget.h}) and then add the choice to \texttt{MainWidget::initChoices()} and \texttt{MainWidget::convert()}, following suit of the previous classes.
+
+\bibliographystyle{plain}
+\bibliography{docs}
 
 
 \end{document}
