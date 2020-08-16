@@ -362,44 +362,45 @@ void LGraphRepresentation::checkBFPermutation(std::vector<vertex>& vertices_x, s
             continue;
         }
 
-        std::size_t width = 0;
+        std::size_t current_width = 0, max_width = 0;
         // If the vertex has no edges, there is no need to extend
         if(edges.at(it->v).size() > 0)
         {
             for(auto it2=it+1; it2 != representation.end(); ++it2)
             {
+                current_width++;
                 // If the next node could intersect and they don't have a common
                 // edge, don't continue with the extension
-                if(it2->y < it->y && it2->x > it->x && edges.at(it->v).count(it2->v) == 0)
+                if(edges.at(it->v).count(it2->v) > 0)
                 {
-                    break;
+                    max_width = current_width;
                 }
-                width++;
+
             }
         }
-        it->width = width;
+        it->width = max_width;
     }
 
     // Sort by y coordinates and calculate height
     std::sort(representation.begin(), representation.end(), [](LNode a, LNode b){return a.y < b.y;});
     for(auto it=representation.begin(); it!=representation.end(); ++it)
     {
-        std::size_t height = 0;
+        std::size_t max_height = 0, current_height = 0;
         // If the vertex has no edges, there is no need to extend
         if(edges.at(it->v).size() > 0)
         {
             for(auto it2=it+1; it2 != representation.end(); ++it2)
             {
+                current_height++;
                 // If the next node's L would intersect and they don't have a common
                 // edge, don't continue with the extension
-                if(it2->y > it->y && it2->x < it->x && (it2->x + it2->width) >= it->x && edges.at(it->v).count(it2->v) == 0)
+                if(edges.at(it->v).count(it2->v) > 0)
                 {
-                    break;
+                    max_height = current_height;
                 }
-                height++;
             }
         }
-        it->height = height;
+        it->height = max_height;
     }
 
 }
