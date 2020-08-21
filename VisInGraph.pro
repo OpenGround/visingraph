@@ -28,6 +28,7 @@ SOURCES += \
     src/ui/inputgraphicsview.cpp \
     src/graph/graphrepresentation.cpp \
     src/graph/lgraphrepresentation.cpp \
+    src/graph/mptgraphrepresentation.cpp \
     src/ui/outputgraphicsview.cpp \
     src/poset.cpp
 
@@ -38,6 +39,7 @@ HEADERS += \
     include/ui/inputgraphicsview.h \
     include/graph/graphrepresentation.h \
     include/graph/lgraphrepresentation.h \
+    include/graph/mptgraphrepresentation.h \
     include/ui/outputgraphicsview.h \
     include/poset.h
 

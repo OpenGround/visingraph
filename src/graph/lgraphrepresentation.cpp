@@ -221,7 +221,7 @@ void LGraphExtRepresentationManager::generateFromGraph(Graph& g)
 
     size = vertices_x.size();
     // Large graphs aren't permitted yet
-    if(size > 12)
+    if(size > 18) // A quick change to check the Blanusa snark
     {
         // At most 11-12 is currently feasible due to memory constraints
         emit graphTooBig();

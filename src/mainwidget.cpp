@@ -2,6 +2,7 @@
 #include "ui_mainwidget.h"
 
 #include "include/graph/lgraphrepresentation.h"
+#include "include/graph/mptgraphrepresentation.h"
 
 #include <QMessageBox>
 #include <QTextStream>
@@ -22,8 +23,9 @@ MainWidget::MainWidget(QWidget *parent) : QWidget(parent), ui(new Ui::MainWidget
 
 void MainWidget::initChoices()
 {
-    ui->graphRepresentationComboBox->addItem(tr("L-Graph"), static_cast<int>(Representation::L_GRAPH));
-    ui->graphRepresentationComboBox->addItem(tr("L-Graph via extensions"), static_cast<int>(Representation::L_GRAPH_EXT));
+    ui->graphRepresentationComboBox->addItem(tr("L-graph"), static_cast<int>(Representation::L_GRAPH));
+    ui->graphRepresentationComboBox->addItem(tr("L-graph via extensions"), static_cast<int>(Representation::L_GRAPH_EXT));
+    ui->graphRepresentationComboBox->addItem(tr("Max-point-tolerance graph"), static_cast<int>(Representation::MPT_GRAPH));
 
 }
 
@@ -49,6 +51,9 @@ void MainWidget::convert()
         break;
     case Representation::L_GRAPH_EXT:
         representation = std::unique_ptr<LGraphExtRepresentationManager>(new LGraphExtRepresentationManager());
+        break;
+    case Representation::MPT_GRAPH:
+        representation = std::unique_ptr<MPTGraphRepresentationManager>(new MPTGraphRepresentationManager());
         break;
     };
     connect(representation.get(), SIGNAL(calculationStarted(int)), this, SLOT(startCalc(int)));

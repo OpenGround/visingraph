@@ -24,7 +24,8 @@ class MainWidget;
 enum class Representation : uint
 {
     L_GRAPH = 0,
-    L_GRAPH_EXT = 1
+    L_GRAPH_EXT = 1,
+    MPT_GRAPH = 2
 };
 
 class MainWidget : public QWidget
