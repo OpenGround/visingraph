@@ -42,8 +42,8 @@ class LGraphRepresentationManager : public GraphRepresentationManager
 public:
     LGraphRepresentationManager();
     ~LGraphRepresentationManager() override {}
-    void generateFromGraph(Graph&) override;
-    void generateFromGraphStateBF(Graph&, std::vector<vertex>, std::vector<vertex>);
+    bool generateFromGraph(Graph&) override;
+    bool generateFromGraphStateBF(Graph&, std::vector<vertex>, std::vector<vertex>);
     void draw(QGraphicsView &view) override;
 
 
@@ -55,9 +55,10 @@ signals:
     void saveState(std::vector<vertex>, std::vector<vertex>);
 
 private:
-    void generateFromGraphBF(Graph&);
+    bool generateFromGraphBF(Graph&);
     bool aborted = false;
     bool viable = false;
+    bool failed = false;
     std::size_t stopped = 0;
     std::size_t foundSolution = 0;
     std::size_t permutations, permutationsPerTick, currentPermutation, counter;
@@ -116,7 +117,7 @@ class LGraphExtRepresentationManager : public GraphRepresentationManager
 public:
     LGraphExtRepresentationManager();
     ~LGraphExtRepresentationManager() override {}
-    void generateFromGraph(Graph&) override;
+    bool generateFromGraph(Graph&) override;
     void draw(QGraphicsView &view) override;
 
 public slots:

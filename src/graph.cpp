@@ -117,3 +117,71 @@ void Graph::removeEdge(vertex u, vertex v)
 
     }
 }
+
+
+bool Graph::loadFromGraph6(std::string& gr)
+{
+    std::size_t vertex_no;
+    std::string edgestring;
+
+    if (gr[0] < 126)
+    {
+        vertex_no = gr[0] - 63;
+        edgestring = gr.substr(1);
+    }
+    else if (gr[1] < 126)
+    {
+        vertex_no = (gr[3] - 63) + (gr[2] - 63) * 64 + (gr[1] - 63) * 64 * 64;
+        edgestring = gr.substr(5);
+    }
+    else
+    {
+        vertex_no = (gr[7] - 63) + (gr[6] - 63) * 64 + (gr[5] - 63) * 64 * 64 + (gr[4] - 63) * 64 * 64 * 64 + (gr[3] - 63) * 64 * 64 * 64 * 64 + (gr[2] - 63) * 64 * 64 * 64 * 64 * 64;
+        edgestring = gr.substr(9);
+    }
+
+    vertices.clear();
+    edges.clear();
+
+    for(vertex i = 0; i < vertex_no; i++)
+    {
+        addVertex(i);
+    }
+
+
+    std::queue<bool> edgeBits = getBits(edgestring);
+    bool isEdge;
+
+    for(vertex i = 0; i < vertex_no; i++)
+    {
+        for(vertex j = 0; j < i; j++)
+        {
+            if(edgeBits.front())
+            {
+                addEdge(i, j);
+            }
+
+            edgeBits.pop();
+        }
+    }
+
+    g6 = gr;
+    return true;
+}
+
+
+std::queue<bool> Graph::getBits(std::string& str)
+{
+    std::queue<bool> q;
+    std::vector<uint8_t> POWERS = {32, 16, 8, 4, 2, 1};
+    for(auto c: str)
+    {
+        uint8_t b = c - 63;
+        for(std::size_t i = 0; i < 6; i++)
+        {
+            q.push((b / POWERS[i]) % 2);
+        }
+    }
+
+    return q;
+}

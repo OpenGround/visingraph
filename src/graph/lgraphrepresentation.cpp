@@ -92,7 +92,7 @@ LGraphRepresentationManager::LGraphRepresentationManager()
 
 }
 
-void LGraphRepresentationManager::generateFromGraph(Graph& graph)
+bool LGraphRepresentationManager::generateFromGraph(Graph& graph)
 {
     return generateFromGraphBF(graph);
 }
@@ -103,7 +103,7 @@ void LGraphRepresentationManager::generateFromGraph(Graph& graph)
  * (n!)^2 permutations
  * \param graph The graph which is to be represented
  */
-void LGraphRepresentationManager::generateFromGraphBF(Graph& graph)
+bool LGraphRepresentationManager::generateFromGraphBF(Graph& graph)
 {
     std::vector<vertex> vertices_x = graph.getVertices();
     std::vector<vertex> vertices_y = graph.getVertices();
@@ -111,7 +111,7 @@ void LGraphRepresentationManager::generateFromGraphBF(Graph& graph)
     return generateFromGraphStateBF(graph, vertices_x, vertices_y);
 }
 
-void LGraphRepresentationManager::generateFromGraphStateBF(Graph& graph, std::vector<vertex> vertices_x, std::vector<vertex> vertices_y)
+bool LGraphRepresentationManager::generateFromGraphStateBF(Graph& graph, std::vector<vertex> vertices_x, std::vector<vertex> vertices_y)
 {
     edges = graph.getEdges();
 
@@ -129,7 +129,7 @@ void LGraphRepresentationManager::generateFromGraphStateBF(Graph& graph, std::ve
         // 21! > 2^64, although I would estimate that at most 11-12 is feasible
         // to be run in a decent timeframe
         emit graphTooBig();
-        return;
+        return false;
     }
 
     permutations = factorial(size);
@@ -155,6 +155,10 @@ void LGraphRepresentationManager::generateFromGraphStateBF(Graph& graph, std::ve
             break;
         }
     }
+
+    while(!viable && !failed){} // wait
+
+    return viable && !failed;
 }
 
 void LGraphRepresentationManager::draw(QGraphicsView& view)
@@ -212,8 +216,9 @@ LGraphExtRepresentationManager::LGraphExtRepresentationManager()
 
 }
 
-void LGraphExtRepresentationManager::generateFromGraph(Graph& g)
+bool LGraphExtRepresentationManager::generateFromGraph(Graph& g)
 {
+
     std::vector<vertex> vertices_x = g.getVertices();
     aborted = false;
     std::size_t size, permutations, permutationsPerTick, counter;
@@ -225,7 +230,7 @@ void LGraphExtRepresentationManager::generateFromGraph(Graph& g)
     {
         // At most 11-12 is currently feasible due to memory constraints
         emit graphTooBig();
-        return;
+        return false;
     }
 
     permutations = factorial(size);
@@ -242,7 +247,7 @@ void LGraphExtRepresentationManager::generateFromGraph(Graph& g)
         {
             emit calculationFinished(ticks);
             emit calculationEnded(true);
-            return;
+            return true;
         }
 
         counter++;
@@ -255,6 +260,7 @@ void LGraphExtRepresentationManager::generateFromGraph(Graph& g)
 
     emit calculationFinished(ticks);
     emit calculationEnded(false);
+    return false;
 }
 
 void LGraphExtRepresentationManager::draw(QGraphicsView &view)

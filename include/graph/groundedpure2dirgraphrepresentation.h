@@ -1,16 +1,16 @@
-#ifndef MPTGRAPHREPRESENTATION_H
-#define MPTGRAPHREPRESENTATION_H
+#ifndef GROUNDEDPURE2DIRGRAPHREPRESENTATION_H
+#define GROUNDEDPURE2DIRGRAPHREPRESENTATION_H
 
 #include <QObject>
 #include "include/graph/graphrepresentation.h"
 #include "include/graph/lgraphrepresentation.h"
 
-class MPTGraphRepresentation : public GraphRepresentation
+class GroundedPure2DirGraphRepresentation : public GraphRepresentation
 {
     Q_OBJECT
 public:
-    MPTGraphRepresentation();
-    ~MPTGraphRepresentation() override {}
+    GroundedPure2DirGraphRepresentation();
+    ~GroundedPure2DirGraphRepresentation() override {}
     void checkPermutation(std::vector<vertex>& vertices_x, std::map<vertex, std::set<vertex>>& edges);
     bool isRepresentationViable(std::map<vertex, std::set<vertex>> edges);
     void draw(QGraphicsView& view) override;
@@ -20,12 +20,12 @@ private:
 };
 
 
-class MPTGraphRepresentationManager : public GraphRepresentationManager
+class GroundedPure2DirGraphRepresentationManager : public GraphRepresentationManager
 {
     Q_OBJECT
 public:
-    MPTGraphRepresentationManager();
-    ~MPTGraphRepresentationManager() override {}
+    GroundedPure2DirGraphRepresentationManager();
+    ~GroundedPure2DirGraphRepresentationManager() override {}
     bool generateFromGraph(Graph&) override;
     void draw(QGraphicsView &view) override;
 
@@ -33,7 +33,7 @@ public slots:
     void stopCalculation() override { aborted = true; }
 
 private:
-    MPTGraphRepresentation representation;
+    GroundedPure2DirGraphRepresentation representation;
     bool checkPermutation(std::vector<vertex>&, Graph&);
     bool generateFromGraphBF(Graph&);
     bool aborted = false;
@@ -48,4 +48,4 @@ private:
 };
 
 
-#endif // MPTGRAPHREPRESENTATION_H
+#endif // GROUNDEDPURE2DIRGRAPHREPRESENTATION_H

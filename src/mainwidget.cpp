@@ -3,6 +3,8 @@
 
 #include "include/graph/lgraphrepresentation.h"
 #include "include/graph/mptgraphrepresentation.h"
+#include "include/graph/groundedpure2dirgraphrepresentation.h"
+#include "include/graph/bipartitegraphrepresentation.h"
 
 #include <QMessageBox>
 #include <QTextStream>
@@ -26,17 +28,38 @@ void MainWidget::initChoices()
     ui->graphRepresentationComboBox->addItem(tr("L-graph"), static_cast<int>(Representation::L_GRAPH));
     ui->graphRepresentationComboBox->addItem(tr("L-graph via extensions"), static_cast<int>(Representation::L_GRAPH_EXT));
     ui->graphRepresentationComboBox->addItem(tr("Max-point-tolerance graph"), static_cast<int>(Representation::MPT_GRAPH));
+    ui->graphRepresentationComboBox->addItem(tr("Grounded PURE-2-DIR"), static_cast<int>(Representation::GROUNDED_PURE_2_DIR));
+
+    ui->positive1ComboBox->addItem(tr("L-graph via extensions"), static_cast<int>(Representation::L_GRAPH_EXT));
+    ui->positive1ComboBox->addItem(tr("Max-point-tolerance graph"), static_cast<int>(Representation::MPT_GRAPH));
+    ui->positive1ComboBox->addItem(tr("Grounded PURE-2-DIR"), static_cast<int>(Representation::GROUNDED_PURE_2_DIR));
+    ui->positive1ComboBox->addItem(tr("Bipartite graph"), static_cast<int>(Representation::BIPARTITE));
+
+    ui->positive2ComboBox->addItem(tr("L-graph via extensions"), static_cast<int>(Representation::L_GRAPH_EXT));
+    ui->positive2ComboBox->addItem(tr("Max-point-tolerance graph"), static_cast<int>(Representation::MPT_GRAPH));
+    ui->positive2ComboBox->addItem(tr("Grounded PURE-2-DIR"), static_cast<int>(Representation::GROUNDED_PURE_2_DIR));
+    ui->positive2ComboBox->addItem(tr("Bipartite graph"), static_cast<int>(Representation::BIPARTITE));
+
+    ui->negativeComboBox->addItem(tr("L-graph via extensions"), static_cast<int>(Representation::L_GRAPH_EXT));
+    ui->negativeComboBox->addItem(tr("Max-point-tolerance graph"), static_cast<int>(Representation::MPT_GRAPH));
+    ui->negativeComboBox->addItem(tr("Grounded PURE-2-DIR"), static_cast<int>(Representation::GROUNDED_PURE_2_DIR));
+    ui->negativeComboBox->addItem(tr("Bipartite graph"), static_cast<int>(Representation::BIPARTITE));
 
 }
 
 void MainWidget::initConnections()
 {
     connect(ui->conversionButton, SIGNAL(clicked()), this, SLOT(convert()));
+    connect(ui->startSearchButton, SIGNAL(clicked()), this, SLOT(startSearch()));
+    connect(ui->fileButton, SIGNAL(clicked()), this, SLOT(chooseFile()));
 
     connect(ui->inputGraphicsView, SIGNAL(nodeAdded(vertex)), this, SLOT(addNode(vertex)));
     connect(ui->inputGraphicsView, SIGNAL(nodeDeleted(vertex)), this, SLOT(deleteNode(vertex)));
     connect(ui->inputGraphicsView, SIGNAL(edgeAdded(vertex, vertex)), this, SLOT(addEdge(vertex, vertex)));
     connect(ui->inputGraphicsView, SIGNAL(edgeDeleted(vertex, vertex)), this, SLOT(deleteEdge(vertex, vertex)));
+
+    connect(this, SIGNAL(searchEnded()), this, SLOT(searchEnd()));
+    connect(this, SIGNAL(nextGraph()), this, SLOT(generateNextGraph()));
 }
 
 void MainWidget::convert()
@@ -54,6 +77,9 @@ void MainWidget::convert()
         break;
     case Representation::MPT_GRAPH:
         representation = std::unique_ptr<MPTGraphRepresentationManager>(new MPTGraphRepresentationManager());
+        break;
+    case Representation::GROUNDED_PURE_2_DIR:
+        representation = std::unique_ptr<GroundedPure2DirGraphRepresentationManager>(new GroundedPure2DirGraphRepresentationManager());
         break;
     };
     connect(representation.get(), SIGNAL(calculationStarted(int)), this, SLOT(startCalc(int)));
@@ -75,7 +101,6 @@ void MainWidget::calculationEnded(bool status)
     {
         QMessageBox::warning(this, tr("No representation exists"), tr("No representation was found for this graph"));
     }
-
 }
 
 
@@ -223,6 +248,205 @@ void MainWidget::calculateFrom(Representation repr, std::vector<vertex> x_vertic
     // TODO: this isn't an ideal solution and should be fixed later
     ((LGraphRepresentationManager*)representation.get())->generateFromGraphStateBF(currentGraph, x_vertices, y_vertices);
 }
+
+void MainWidget::calculationEnded(int checkid, bool status)
+{
+    calcstatus[checkid] = static_cast<CalcState>(status);
+
+    if (calcstatus[0] == CalcState::SUCCESS && calcstatus[1] == CalcState::SUCCESS && calcstatus[2] == CalcState::FAILED)
+    {
+        QMessageBox::warning(this, tr("Counterexample found"), QString::fromStdString(currentGraph.getG6()));
+    }
+    else if(calcstatus[0] != CalcState::IN_PROGRESS && calcstatus[1] != CalcState::IN_PROGRESS && calcstatus[2] != CalcState::IN_PROGRESS)
+    {
+        emit nextGraph();
+    }
+
+}
+
+void MainWidget::chooseFile()
+{
+     ui->fileLabel->setText(QFileDialog::getOpenFileName(nullptr, "Enter the filename"));
+}
+
+void MainWidget::prepareGraphQueue()
+{
+    // clear the queue
+    std::queue<std::string> empty;
+    std::swap(graphQueue, empty);
+
+    QFile in(ui->fileLabel->text());
+
+    if (in.open(QIODevice::ReadOnly|QIODevice::Text))
+    {
+       QTextStream instream(&in);
+       while (!instream.atEnd())
+       {
+          QString line = instream.readLine();
+          graphQueue.push(line.toStdString());
+       }
+       in.close();
+    }
+}
+
+void MainWidget::generateNextGraph()
+{
+    std::size_t graphs = graphQueue.size(), remaining = graphs, counter=0;
+    std::size_t graphsPerTick = (graphs / INT_MAX) + 1;
+    int ticks = static_cast<int>(graphs / graphsPerTick);
+
+    startCalc(ticks);
+
+    while(!aborted && !graphQueue.empty())
+    {
+        QApplication::processEvents();
+        bool loaded = loadGraphFromQueue();
+
+        std::cout << graphQueue.size() << " " << loaded << std::endl;
+
+        for(std::size_t i = 0; i < 3; i++)
+        {
+            calcstatus[i] = CalcState::IN_PROGRESS;
+        }
+
+        if (!loaded)
+            break;
+
+        bool status = positive1->generateFromGraph(currentGraph);
+
+        if (status)
+        {
+            status = positive2->generateFromGraph(currentGraph);
+
+            if (status)
+            {
+                status = negative->generateFromGraph(currentGraph);
+
+                if (!status)
+                {
+                    QMessageBox::warning(this, tr("Counterexample found"), QString::fromStdString(currentGraph.getG6()));
+                }
+            }
+        }
+
+        counter += remaining - graphQueue.size();
+        remaining -= counter;
+        if (counter > graphsPerTick)
+        {
+            tick(static_cast<int>(counter/graphsPerTick));
+            counter = counter % graphsPerTick;
+        }
+
+    }
+
+    if(!aborted)
+    {
+        stopCalc(ticks);
+        searchEnd();
+    }
+    else
+    {
+        QMessageBox::warning(this, tr("Calculation aborted"), tr("The calculation was aborted"));
+    }
+
+}
+
+bool MainWidget::loadGraphFromQueue()
+{
+    // TODO: There might be a bug with the last graph in the queue.
+    while (!graphQueue.empty() && !currentGraph.loadFromGraph6(graphQueue.front()))
+    {
+        graphQueue.pop();
+    }
+    if (graphQueue.empty())
+    {
+        emit searchEnded();
+        return false;
+    }
+    else
+    {
+        graphQueue.pop();
+    }
+
+    return true;
+}
+
+void MainWidget::startSearch()
+{
+    prepareGraphQueue();
+    aborted = true;
+
+    // TODO: this has to be doable more efficiently
+    Representation repr = static_cast<Representation>(ui->positive1ComboBox->currentData().toInt());
+
+    switch (repr)
+    {
+    case Representation::L_GRAPH:
+        positive1 = std::unique_ptr<LGraphRepresentationManager>(new LGraphRepresentationManager());
+        break;
+    case Representation::L_GRAPH_EXT:
+        positive1 = std::unique_ptr<LGraphExtRepresentationManager>(new LGraphExtRepresentationManager());
+        break;
+    case Representation::MPT_GRAPH:
+        positive1 = std::unique_ptr<MPTGraphRepresentationManager>(new MPTGraphRepresentationManager());
+        break;
+    case Representation::GROUNDED_PURE_2_DIR:
+        positive1 = std::unique_ptr<GroundedPure2DirGraphRepresentationManager>(new GroundedPure2DirGraphRepresentationManager());
+        break;
+    case Representation::BIPARTITE:
+        positive1 = std::unique_ptr<BipartiteGraphRepresentationManager>(new BipartiteGraphRepresentationManager());
+        break;
+    };
+    repr = static_cast<Representation>(ui->positive2ComboBox->currentData().toInt());
+
+    switch (repr)
+    {
+    case Representation::L_GRAPH:
+        positive2 = std::unique_ptr<LGraphRepresentationManager>(new LGraphRepresentationManager());
+        break;
+    case Representation::L_GRAPH_EXT:
+        positive2 = std::unique_ptr<LGraphExtRepresentationManager>(new LGraphExtRepresentationManager());
+        break;
+    case Representation::MPT_GRAPH:
+        positive2 = std::unique_ptr<MPTGraphRepresentationManager>(new MPTGraphRepresentationManager());
+        break;
+    case Representation::GROUNDED_PURE_2_DIR:
+        positive2 = std::unique_ptr<GroundedPure2DirGraphRepresentationManager>(new GroundedPure2DirGraphRepresentationManager());
+        break;
+    case Representation::BIPARTITE:
+        positive2 = std::unique_ptr<BipartiteGraphRepresentationManager>(new BipartiteGraphRepresentationManager());
+        break;
+    };
+    repr = static_cast<Representation>(ui->negativeComboBox->currentData().toInt());
+
+    switch (repr)
+    {
+    case Representation::L_GRAPH:
+        negative = std::unique_ptr<LGraphRepresentationManager>(new LGraphRepresentationManager());
+        break;
+    case Representation::L_GRAPH_EXT:
+        negative = std::unique_ptr<LGraphExtRepresentationManager>(new LGraphExtRepresentationManager());
+        break;
+    case Representation::MPT_GRAPH:
+        negative = std::unique_ptr<MPTGraphRepresentationManager>(new MPTGraphRepresentationManager());
+        break;
+    case Representation::GROUNDED_PURE_2_DIR:
+        negative = std::unique_ptr<GroundedPure2DirGraphRepresentationManager>(new GroundedPure2DirGraphRepresentationManager());
+        break;
+    case Representation::BIPARTITE:
+        negative = std::unique_ptr<BipartiteGraphRepresentationManager>(new BipartiteGraphRepresentationManager());
+        break;
+
+    };
+
+    generateNextGraph();
+}
+
+void MainWidget::searchEnd()
+{
+    QMessageBox::warning(this, tr("Counterexample not found"), tr("Try bigger graphs I guess."));
+}
+
 
 MainWidget::~MainWidget()
 {

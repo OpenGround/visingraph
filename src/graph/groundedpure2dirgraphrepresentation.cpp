@@ -1,4 +1,4 @@
-#include "include/graph/mptgraphrepresentation.h"
+#include "include/graph/groundedpure2dirgraphrepresentation.h"
 #include "include/poset.h"
 
 #include <QCoreApplication>
@@ -7,23 +7,24 @@
 #include <QProgressDialog>
 
 
-MPTGraphRepresentationManager::MPTGraphRepresentationManager()
+GroundedPure2DirGraphRepresentationManager::GroundedPure2DirGraphRepresentationManager()
 {
 
 }
 
-bool MPTGraphRepresentationManager::generateFromGraph(Graph& graph)
+bool GroundedPure2DirGraphRepresentationManager::generateFromGraph(Graph& graph)
 {
     return generateFromGraphBF(graph);
 }
 
 /*!
- * \brief MPTGraphRepresentationManager::generate_from_graph_BF
+ * \brief GroundedPure2DirGraphRepresentationManager::generate_from_graph_BF
  * Attempt to create the representation by checking all possible
  * n! permutations
+ * This can be done in polynomial time using
  * \param graph The graph which is to be represented
  */
-bool MPTGraphRepresentationManager::generateFromGraphBF(Graph& graph)
+bool GroundedPure2DirGraphRepresentationManager::generateFromGraphBF(Graph& graph)
 {
     std::vector<vertex> vertices_x = graph.getVertices();
 
@@ -40,7 +41,7 @@ bool MPTGraphRepresentationManager::generateFromGraphBF(Graph& graph)
     if(size > 20)
     {
         // 21! > 2^64, although I would estimate that at most 11-12 is feasible
-        // to be run in a decent timeframe
+        // to be run in a decent timeframe (given the graph is ugly w.r.t. the algorithm)
         emit graphTooBig();
         return false;
     }
@@ -77,17 +78,18 @@ bool MPTGraphRepresentationManager::generateFromGraphBF(Graph& graph)
 
     emit calculationFinished(ticks);
     emit calculationEnded(false);
+
     return false;
 }
 
 
-void MPTGraphRepresentationManager::draw(QGraphicsView& view)
+void GroundedPure2DirGraphRepresentationManager::draw(QGraphicsView& view)
 {
     representation.draw(view);
 }
 
 
-bool MPTGraphRepresentationManager::checkPermutation(std::vector<vertex>& vertices_x, Graph &g)
+bool GroundedPure2DirGraphRepresentationManager::checkPermutation(std::vector<vertex>& vertices_x, Graph &g)
 {
     edges = g.getEdges();
     representation.checkPermutation(vertices_x, edges);
@@ -95,13 +97,13 @@ bool MPTGraphRepresentationManager::checkPermutation(std::vector<vertex>& vertic
 }
 
 
-MPTGraphRepresentation::MPTGraphRepresentation()
+GroundedPure2DirGraphRepresentation::GroundedPure2DirGraphRepresentation()
 {
 
 }
 
 
-void MPTGraphRepresentation::checkPermutation(std::vector<vertex>& vertices_x, std::map<vertex, std::set<vertex>>& edges)
+void GroundedPure2DirGraphRepresentation::checkPermutation(std::vector<vertex>& vertices_x, std::map<vertex, std::set<vertex>>& edges)
 {
     representation.clear();
 
@@ -159,7 +161,7 @@ void MPTGraphRepresentation::checkPermutation(std::vector<vertex>& vertices_x, s
             {
                 current_height++;
                 // If the next node's L would intersect and they don't have a common
-                // edge, don't continue with the extension
+                // edge, extend farther
                 if(edges.at(it->v).count(it2->v) > 0)
                 {
                     max_height = current_height;
@@ -171,7 +173,7 @@ void MPTGraphRepresentation::checkPermutation(std::vector<vertex>& vertices_x, s
 
 }
 
-bool MPTGraphRepresentation::isRepresentationViable(std::map<vertex, std::set<vertex>> edges)
+bool GroundedPure2DirGraphRepresentation::isRepresentationViable(std::map<vertex, std::set<vertex>> edges)
 {
     std::sort(representation.begin(), representation.end(), [](LNode a, LNode b){return a.v < b.v;});
     for(auto it=representation.begin(); it != representation.end(); ++it)
@@ -183,12 +185,19 @@ bool MPTGraphRepresentation::isRepresentationViable(std::map<vertex, std::set<ve
                 return false;
             }
         }
+
+        // We want a 2-DIR representation despite using MPT as backend
+        if(it->width > 0 && it->height > 0)
+        {
+            return false;
+        }
+
     }
 
     return true;
 }
 
-void MPTGraphRepresentation::draw(QGraphicsView& view)
+void GroundedPure2DirGraphRepresentation::draw(QGraphicsView& view)
 {
     QGraphicsScene* scene = view.scene();
     std::size_t node_nr = representation.size();
@@ -207,7 +216,7 @@ void MPTGraphRepresentation::draw(QGraphicsView& view)
     qreal unit_width = width / (node_nr);
     qreal unit_height = height / (node_nr);
 
-    // Draw the L for every node
+    // Draw the line segment for every node
     for (auto node: representation)
     {
         qreal node_x = node.x * unit_width + left;
@@ -215,12 +224,19 @@ void MPTGraphRepresentation::draw(QGraphicsView& view)
         qreal node_width = (node.width + 0.75) * unit_width;
         qreal node_height = (node.height + 0.75) * unit_height;
 
-        scene->addLine(node_x, node_y, node_x + node_width, node_y);
-        scene->addLine(node_x, node_y - node_height, node_x, node_y);
+        if (node.width > 0)
+        {
+            scene->addLine(node_x, node_y, node_x + node_width, node_y);
+        }
+
+        if (node.height > 0 || node.width == 0) // The second part of the condition fixes "invisible" line segments with no neighbors
+        {
+            scene->addLine(node_x, node_y - node_height, node_x, node_y);
+        }
 
         QGraphicsSimpleTextItem* text = scene->addSimpleText(QString::number(node.v));
-        text->setX(node_x+1.5*FONT_SIZE);
-        text->setY(node_y-2*FONT_SIZE);
+        text->setX(node_x+0.5*FONT_SIZE);
+        text->setY(node_y-1.5*FONT_SIZE);
 
     }
 

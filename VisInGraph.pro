@@ -30,7 +30,9 @@ SOURCES += \
     src/graph/lgraphrepresentation.cpp \
     src/graph/mptgraphrepresentation.cpp \
     src/ui/outputgraphicsview.cpp \
-    src/poset.cpp
+    src/poset.cpp \
+    src/graph/groundedpure2dirgraphrepresentation.cpp \
+    src/graph/bipartitegraphrepresentation.cpp
 
 HEADERS += \
     include/graph.h \
@@ -41,7 +43,9 @@ HEADERS += \
     include/graph/lgraphrepresentation.h \
     include/graph/mptgraphrepresentation.h \
     include/ui/outputgraphicsview.h \
-    include/poset.h
+    include/poset.h \
+    include/graph/groundedpure2dirgraphrepresentation.h \
+    include/graph/bipartitegraphrepresentation.h
 
 FORMS += \
     ui/mainwindow.ui \

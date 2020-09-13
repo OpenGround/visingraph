@@ -9,3 +9,8 @@ GraphRepresentationManager::GraphRepresentationManager()
 {
 
 }
+
+void GraphRepresentationManager::calculationIdEnd(bool status)
+{
+    emit calculationEnded(calculationId, status);
+}
